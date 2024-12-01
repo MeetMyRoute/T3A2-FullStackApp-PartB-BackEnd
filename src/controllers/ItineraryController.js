@@ -69,22 +69,65 @@ const getItineraries = async(request, response) => {
     }
 }
 
-// Gets all shared itineraries
+// Get all shared itineraries
 const getSharedItineraries = async(response, request) => {
 
 }
 
-// Gets shared itineraries based on options query paramters: destination, startDate and endDate
-const getSharedItineraryByFilters = async(response, request) => {
-    
+// Get shared itineraries based on options query paramters: destination, startDate and endDate
+const getSharedItinerariesByFilters = async(response, request) => {
+    try {
+        // Extract destination, start date, and end date from request query
+        const {destination, startDate, endDate} = request.query;
+
+        // Ensure all required query parmaeters are provided
+        if (!destination || !startDate || !endDate) {
+            return response.status(400).json({
+                message: "Destination, start date, and end date are required to fetch itineraries"
+            });
+        }
+
+        // Convert start date and end date to date objects
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        // Validate date range
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+            return response.status(400).json({
+                message: "Invalid start date or end date format"
+            });
+        }
+
+        // Find itineraries that match the shared criteria
+        const sharedItineraries = await ItineraryModel.find({
+            destination: destination,
+            startDate: {$lte: end},
+            end: {$gte: start}
+        });
+
+        // If no itineraries are found respond with an error
+        if (!sharedItineraries || sharedItineraries.length === 0) {
+            return response.status(404).json({
+                message: "No itineraries found with the given destination and date range"
+            });
+        }
+
+        return response.status(200).json(sharedItineraries);
+    } catch(error) {
+        // If something goes wrong during the database query respond with an error
+        return response.status(500).json({
+            message: "Itineraries fetched unsuccessfully",
+            error: error.message
+        });
+    }
 }
 
-// Updates details of a specific itinerary
+// Update details of a specific itinerary
 const updateItinerary = async(response, request) => {
     
 }
 
-// Deletes an itinerary from the database
+// Delete an itinerary from the database
 const deleteItinerary = async(request, response) => {
     
 }
@@ -93,7 +136,7 @@ module.exports = {
     createItinerary,
     getItineraries,
     getSharedItineraries,
-    getSharedItineraryByFilters,
+    getSharedItinerariesByFilters,
     updateItinerary,
     deleteItinerary
 }
