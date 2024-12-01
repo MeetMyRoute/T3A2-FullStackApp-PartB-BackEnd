@@ -11,12 +11,16 @@ const ItinerarySchema = mongoose.Schema({
         required: true,
         trim: true
     },
-    travelDates: {
-        type: String,
+    startDate: {
+        type: Date,
+        required: true
+    },
+    endDate: {
+        type: Date,
         required: true
     },
     accommodation: String,
-    activities: String
+    activities: [String]
 });
 
 const ItineraryModel = mongoose.model("Itinerary", ItinerarySchema);
