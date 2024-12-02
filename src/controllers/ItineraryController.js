@@ -1,10 +1,12 @@
+const { response, request } = require("express");
 const Itinerary = require("../models/ItineraryModel");
+const validateDates = require("../middleware/itinerary");
 
 // Create a new itinerary to the database
 const createItinerary = async(request, response) => {
     try {
         // Extract the itinerary data from the request body
-        const {destination, startDate, endDate, accommodation, activites} = request.body;
+        const {destination, startDate, endDate, accommodation, activities} = request.body;
         
         // Check if the required fields are provided
         if (!destination || !startDate || !endDate) {
@@ -13,6 +15,8 @@ const createItinerary = async(request, response) => {
             });
         }
 
+        validateDates(startDate, endDate);
+
         // Create a new itinerary object
         const newItinerary = new ItineraryModel({
             userId: request.user._id,
@@ -20,7 +24,7 @@ const createItinerary = async(request, response) => {
             startDate,
             endDate,
             accommodation,
-            activites
+            activities
         });
 
         // Save the new itinerary to the database
@@ -94,8 +98,7 @@ const getSimplifiedItineraries = async(response, request) => {
     }
 }
 
-
-// Get all shared itineraries excluding the user's
+// Get all shared (simplified) itineraries excluding the user's
 const getSharedItineraries = async(response, request) => {
     try {
         // Find itineraries that do not belong to the user
@@ -124,7 +127,7 @@ const getSharedItineraries = async(response, request) => {
     }
 }
 
-// Get shared itineraries excluding the user's by filters: destination, startDate and endDate
+// Get shared (simplified) itineraries excluding the user's by filters: destination, startDate and endDate
 const getSharedItinerariesByFilters = async(response, request) => {
     try {
         // Extract filters from query params
@@ -177,13 +180,52 @@ const getSharedItinerariesByFilters = async(response, request) => {
     }
 }
 
+// Get shared (simplified) itineraries by a specific user
+const getSharedItinerariesByUser = async(response, request) => {
+    try {
+        // Get the user ID from the URL parameters
+        const {userId} = request.params;
+
+        // Ensure the user's itineraries are excluded
+        if (userId === request.user._id.toString()) {
+            return response.status(400).json({
+                message: "Cannot retrieve your own itineraries using this endpoint"
+            });
+        }
+
+        // Fetch itineraries owned by the specific user
+        const itineraries = await ItineraryModel.find(
+            {userId},
+            "destination startDate endDate"
+        )
+
+        // Check if there are any itineraries for the specified user
+        if (!itineraries.length) {
+            return response.status(404).json({
+                message: "No itineraries found for the specified user"
+            });
+        }
+
+        // Respond with the filtered itineraries
+        return response.status(200).json({
+            message: "Itineraries retrieved successfully",
+            data: itineraries
+        });
+    } catch(error) {
+        return response.status(500).json({
+            message: "Error retrieving itineraries by user",
+            error
+        });
+    }
+}
+
 // Update details of a specific itinerary
 const updateItinerary = async(response, request) => {
     try {
         // Get the itinerary ID from the URL parameters
         const {id} = request.params;
         // Data to update from the request body
-        const updateData = request.body;
+        const {destination, startDate, endDate, accommodation, activities} = request.body;
 
         // Find the itinerary and ensure it belongs to the user
         const itinerary = await ItineraryModel.findOne({
@@ -197,14 +239,25 @@ const updateItinerary = async(response, request) => {
             });
         }
 
-        // Update the itinerary
-        Object.assign(itinerary, updateData);
-        await itinerary.save();
+        // Validate dates if they are provided
+        if (startDate && endDate) {
+            validateDates(startDate, endDate);
+        }
+
+        // Update fields only if they are provided
+        if (destination !== undefined) itinerary.destination = destination;
+        if (startDate !== undefined) itinerary.startDate = startDate;
+        if (endDate !== undefined) itinerary.endDate = endDate;
+        if (accommodation !== undefined) itinerary.accommodation = accommodation;
+        if (activities !== undefined) itinerary.activities = activities;
+
+        // Save the updated itinerary
+        const updateItinerary = await itinerary.save();
 
         // Respond with the updated itinerary
         return response.status(200).json({
             message: "Itinerary updated successfully",
-            data: itinerary
+            data: updateItinerary
         });
     } catch(error) {
         return response.status(500).json({
@@ -249,6 +302,7 @@ module.exports = {
     getItineraries,
     getSimplifiedItineraries,
     getSharedItineraries,
+    getSharedItinerariesByUser,
     getSharedItinerariesByFilters,
     updateItinerary,
     deleteItinerary
