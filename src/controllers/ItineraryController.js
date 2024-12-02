@@ -69,50 +69,100 @@ const getItineraries = async(request, response) => {
     }
 }
 
-// Get all shared itineraries
+// Get all simplified itineraries owned by the user
+
+
+// Get all shared itineraries excluding the logged-in user's
 const getSharedItineraries = async(response, request) => {
-
-}
-
-// Get shared itineraries based on options query paramters: destination, startDate and endDate
-const getSharedItinerariesByFilters = async(response, request) => {
     try {
-        // Extract destination, start date, and end date from request query
-        const {destination, startDate, endDate} = request.query;
+        // Extract the logged-in user's ID
+        const loggedInUserId = request.user._id;
 
-        // Ensure all required query parmaeters are provided
-        if (!destination || !startDate || !endDate) {
-            return response.status(400).json({
-                message: "Destination, start date, and end date are required to fetch itineraries"
+        // Fetch all itineraries and project and exclude required fields
+        const itineraries = await ItineraryModel.find({userId: {$ne: loggedInUserId}})
+            .select("destination startDate endDate userId")
+            .populate("userId", "name");
+
+        // If no itineraries are found respond with an error
+        if (!itineraries || itineraries.length === 0) {
+            return response.status(404).json({
+                message: "No itineraries found"
             });
         }
 
-        // Convert start date and end date to date objects
+        // Map results to include only the required fields
+        const result = itineraries.map(itinerary => ({
+            destination: itinerary.destination,
+            startDate: itinerary.startDate,
+            endDate: itinerary.endDate,
+            user: itinerary.userId
+        }));
+
+        // Respond with the itineraries
+        return response.status(200).json(result);
+    } catch(error) {
+        // If something goes wrong during the database query respond with an error
+        return response.status(500).json({
+            message: "Itineraries fetched unsuccessfully",
+            error: error.message
+        });
+    }
+}
+
+// Get shared itineraries excluding the logged-in user's based on query parameters: destination, startDate and endDate
+const getSharedItinerariesByFilters = async(response, request) => {
+    try {
+        // Extract the logged-in user's ID
+        const loggedInUserId = request.user._id;
+
+        // Extract destination, start date, and end date from request query
+        const {destination, startDate, endDate} = request.query;
+
+        // Ensure all required query parameters are provided
+        if (!destination || !startDate || !endDate) {
+            return response.status(400).json({
+                message: "Destination, start date, and end date are required to filter itineraries"
+            });
+        }
+
+        // Convert start date and end date to Date objects
         const start = new Date(startDate);
         const end = new Date(endDate);
 
-        // Validate date range
+        // Validate date formats
         if (isNaN(start.getTime()) || isNaN(end.getTime())) {
             return response.status(400).json({
                 message: "Invalid start date or end date format"
             });
         }
 
-        // Find itineraries that match the shared criteria
-        const sharedItineraries = await ItineraryModel.find({
+        // Find itineraries that match and exclude the criteria
+        const itineraries = await ItineraryModel.find({
+            userId: {$ne: loggedInUserId},
             destination: destination,
             startDate: {$lte: end},
             end: {$gte: start}
-        });
+        })
+            .select("destination startDate endDate userId")
+            .populate("userId", "name");
 
         // If no itineraries are found respond with an error
-        if (!sharedItineraries || sharedItineraries.length === 0) {
+        if (!itineraries || itineraries.length === 0) {
             return response.status(404).json({
                 message: "No itineraries found with the given destination and date range"
             });
         }
 
-        return response.status(200).json(sharedItineraries);
+        // Map result to include only the required fields
+        const result = itineraries.map(itinerary => ({
+            destination: itinerary.destination,
+            startDate: itinerary.startDate,
+            endDate: itinerary.endDate,
+            user: itinerary.userId
+        }));
+
+        // Respond with the itineraries
+        return response.status(200).json(result);
     } catch(error) {
         // If something goes wrong during the database query respond with an error
         return response.status(500).json({
