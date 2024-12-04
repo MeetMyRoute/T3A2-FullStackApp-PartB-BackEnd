@@ -1,6 +1,7 @@
 const express = require("express");
 const { createItinerary, getItineraries, getSimplifiedItineraries, getSharedItineraries, getSharedItinerariesByUser, deleteItinerary, updateItinerary, getSharedItinerariesByFilters } = require("../controllers/ItineraryController");
 const router = express.Router();
+// const auth = require();
 
 // Route for creating a new itinerary to the database
 router.post("/itinerary", createItinerary);
