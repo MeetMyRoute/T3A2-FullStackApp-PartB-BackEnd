@@ -1,34 +1,43 @@
 const bcrypt = require("bcryptjs");
 const asyncHandler = require("express-async-handler"); 
 const jwt = require("jsonwebtoken");
+const { userModel } = require('../model/userModel');
+
+// Generate JWT Token
+const generateToken = (id) => {
+    return jwt.sign({ id }, process.env.SECRET_ACCESS_TOKEN, {
+        expiresIn: '1h',
+    });
+  };
 
 // Get users 
 // Register User
 const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, password, status, location, travelPreferences, socialMediaLink } = req.body;
+  const { name, email, password, status, location, travelPreferencesAndGoals, socialMediaLink } = req.body;
 
   try {
       // check fields have been filled in
-      if (!email || !password || !status || !location || !travelPreferences || !socialMediaLink) {
+      if (!email || !password || !status || !location || !travelPreferencesAndGoals || !socialMediaLink) {
           return res.status(400).json({ message: "Please fill in all fields" });
       }
 
       // check if user already exists
-      const userExists = await User.findOne({ email });
+      const userExists = await userModel.findOne({ email });
       if (userExists) {
           return res.status(400).json({ message: "User already exists" });
       }
 
       // create hashed password
-      const hashedPassword = await bcrypt.hash(password, 10);
+      const salt = await bcrypt.genSalt(10); 
+      const hashedPassword = await bcrypt.hash(password, salt);
 
       // create a new user
-      const newUser = await User.create({
+      const newUser = await userModel.create({
           name,
           email,
           password: hashedPassword,
           location,
-          travelPreferences,
+          travelPreferencesAndGoals,
           status,
           socialMediaLink,
       });
@@ -41,7 +50,7 @@ const registerUser = asyncHandler(async (req, res) => {
               email: newUser.email,
               status: newUser.status,
               location: newUser.location,
-              travelPreferences: newUser.travelPreferences,
+              travelPreferencesAndGoals: newUser.travelPreferencesAndGoals, 
               socialMediaLink: newUser.socialMediaLink,
               token: generateToken(newUser._id),
           });
@@ -65,7 +74,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
   try {
       // Check for user by email
-      const user = await User.findOne({ email });
+      const user = await userModel.findOne({ email });
 
       if (!user) {
           return res.status(401).json({ message: "Invalid credentials" });
@@ -91,10 +100,21 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 });
 
+// Get currently logged-in user data
+const recieveLoggedInUser = asyncHandler(async (req, res) => {
+    const { _id, name, email } = await userModel.findById(req.user.id); 
+    res.status(200).json({
+        id: _id, 
+        name, 
+        email, 
+    }); 
+}); 
+
 // Admin login 
-/// RESET PASSWORD
+/// RESET PASSWORD!
 
 module.exports = {
     registerUser,
     loginUser,
+    recieveLoggedInUser
 };
