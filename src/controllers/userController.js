@@ -13,7 +13,7 @@ const generateToken = (id) => {
 // Get users 
 // Register User
 const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, password, status, location, travelPreferencesAndGoals, socialMediaLink } = req.body;
+  const {name, email, password, status, location, travelPreferencesAndGoals, socialMediaLink, isAdmin} = req.body;
 
   try {
       // check fields have been filled in
@@ -40,6 +40,7 @@ const registerUser = asyncHandler(async (req, res) => {
           travelPreferencesAndGoals,
           status,
           socialMediaLink,
+          isAdmin: isAdmin || false 
       });
 
       // check if user creation was successful
@@ -65,7 +66,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
 // Login User
 const loginUser = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+  const {email, password} = req.body;
 
   // Check if required fields are present
   if (!email || !password) {
@@ -83,7 +84,7 @@ const loginUser = asyncHandler(async (req, res) => {
       // Compare passwords
       const isPasswordMatch = await bcrypt.compare(password, user.password);
       if (!isPasswordMatch) {
-          return res.status(401).json({ message: "Invalid credentials" });
+          return res.status(401).json({ message: "Invalid password" });
       }
 
       // Generate JWT token
@@ -111,10 +112,47 @@ const recieveLoggedInUser = asyncHandler(async (req, res) => {
 }); 
 
 // Admin login 
+const adminLogin = asyncHandler (async (req, res) => {
+    const {email, password} = req.body 
+
+    try {
+        // Check for user by email
+        const user = await userModel.findOne({email}); 
+        if (!user) {
+            return res.status(401).json({message: "Invalid username or password"}); 
+        }
+
+        // Check if user is an admin
+        if (!user.isAdmin) {
+            return res.status(403).json({message: "Access denied. You are not an admin." });
+        }
+
+         // Compare passwords
+        const isPasswordMatch = await bcrypt.compare(password, user.password);
+        if (!isPasswordMatch) {
+          return res.status(401).json({message: "Invalid password" });
+        }
+
+        // Generate JWT token
+        const token = generateToken(user._id);
+
+        // Respond with success message and token
+        res.json({
+            message: "Logged in successfully",
+            token,
+        });
+
+    } catch (error) {
+        console.error("Error during admin login:", error);
+        res.status(500).json({ message: "An error occurred. Please try again later." });
+    }
+}); 
+
 /// RESET PASSWORD!
 
 module.exports = {
     registerUser,
     loginUser,
-    recieveLoggedInUser
+    recieveLoggedInUser, 
+    adminLogin
 };
