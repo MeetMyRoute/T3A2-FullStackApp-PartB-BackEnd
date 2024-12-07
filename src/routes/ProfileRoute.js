@@ -1,12 +1,12 @@
 const express = require("express");
-const { getUserProfile, updateUserProfile } = require("../controllers/UserProfileController");
+const { getProfile, updateProfile } = require("../controllers/ProfileController");
 const router = express.Router();
 // const { auth } = require();
 
 // Route for getting user profile of a specific user
-router.get("/:id", getUserProfile);
+router.get("/:id", getProfile);
 
 // Route for updating user profile details for a specific user
-router.put("/:id", updateUserProfile);
+router.put("/:id", updateProfile);
 
 module.exports = router;
