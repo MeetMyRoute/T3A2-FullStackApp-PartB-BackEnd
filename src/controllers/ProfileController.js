@@ -2,7 +2,7 @@ const {request, response } = require("express");
 const { UserModel } = require("../models/UserModel");
 
 // Get a user profile
-const getUserProfile = async (request, response) => {
+const getProfile = async (request, response) => {
     try {
         // Get the user ID from the URL parameters
         const {id} = request.params;
@@ -31,7 +31,7 @@ const getUserProfile = async (request, response) => {
 }
 
 // Update details of user profile
-const updateUserProfile = async (request, response) => {
+const updateProfile = async (request, response) => {
     try {
         // Get the user ID from the URL parameters
         const {id} = request.params;
@@ -82,6 +82,6 @@ const updateUserProfile = async (request, response) => {
 }
 
 module.exports = {
-    getUserProfile,
-    updateUserProfile
+    getProfile,
+    updateProfile
 }
