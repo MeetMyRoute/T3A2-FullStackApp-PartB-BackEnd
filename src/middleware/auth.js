@@ -4,10 +4,7 @@ const { userModel } = require('../model/userModel');
 
 const auth = asyncHandler (async (req, res, next) => {
     let token; 
-    if (
-        req.headers.authorization &&
-        req.headers.authorization.startsWith("Bearer")
-    ) {
+    if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
         try {
             // Receive token from header
             token = req.headers.authorization.split(" ")[1];
@@ -23,6 +20,7 @@ const auth = asyncHandler (async (req, res, next) => {
 
             next(); 
         } catch (error) {
+            console.error("JWT verification failed:", error);
             res.status(401).json({message: "Unauthorised User"}); 
         }
     }
@@ -31,16 +29,7 @@ const auth = asyncHandler (async (req, res, next) => {
     }
 }); 
 
-// Admin access middleware
-const adminAuth = asyncHandler(async (req, res, next) => {
-    if (req.isAdmin) {
-        next();  // Proceed if the user is an admin
-    } else {
-        res.status(403).json({ message: "Forbidden, Admin access required" }); // Deny access if not an admin
-    }
-});
-
 module.exports = { 
     auth, 
-    adminAuth, 
 }; 
+
