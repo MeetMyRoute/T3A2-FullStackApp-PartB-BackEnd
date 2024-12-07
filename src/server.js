@@ -14,8 +14,8 @@ app.get("/", (request, response) => {
     });
 });
 
-const UserRouter = require("./routes/UserRoute");
-app.use("user", UserRouter);
+const ProfileRouter = require("./routes/ProfileRoute");
+app.use("profile", ProfileRouter);
 
 module.exports = {
     app
