@@ -4,34 +4,34 @@ const jwt = require("jsonwebtoken");
 const { userModel } = require('../model/userModel');
 
 // Generate JWT Token
-const generateToken = (id) => {
-    return jwt.sign({ id }, process.env.SECRET_ACCESS_TOKEN, {
+const generateToken = (id, isAdmin) => {
+    return jwt.sign({ id, isAdmin }, process.env.SECRET_ACCESS_TOKEN, {
         expiresIn: '1h',
     });
   };
 
-// Get users 
-// Register User
+// @desc    Register new user
+// @route   POST /api/users
 const registerUser = asyncHandler(async (req, res) => {
   const {name, email, password, status, location, travelPreferencesAndGoals, socialMediaLink, isAdmin} = req.body;
 
   try {
-      // check fields have been filled in
+      // Check fields have been filled in
       if (!email || !password || !status || !location || !travelPreferencesAndGoals || !socialMediaLink) {
           return res.status(400).json({ message: "Please fill in all fields" });
       }
 
-      // check if user already exists
+      // Check if user already exists
       const userExists = await userModel.findOne({ email });
       if (userExists) {
           return res.status(400).json({ message: "User already exists" });
       }
 
-      // create hashed password
+      // Create hashed password
       const salt = await bcrypt.genSalt(10); 
       const hashedPassword = await bcrypt.hash(password, salt);
 
-      // create a new user
+      // Create a new user
       const newUser = await userModel.create({
           name,
           email,
@@ -43,7 +43,7 @@ const registerUser = asyncHandler(async (req, res) => {
           isAdmin: isAdmin || false 
       });
 
-      // check if user creation was successful
+      // Check if user creation was successful
       if (newUser) {
           return res.status(201).json({
               _id: newUser.id,
@@ -64,7 +64,8 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 });
 
-// Login User
+// @desc    User Login
+// @route   POST /api/users/login
 const loginUser = asyncHandler(async (req, res) => {
   const {email, password} = req.body;
 
@@ -88,11 +89,12 @@ const loginUser = asyncHandler(async (req, res) => {
       }
 
       // Generate JWT token
-      const token = generateToken(user._id);
+      const token = generateToken(user._id, user.isAdmin);
 
       // Respond with success message and token
       res.json({
           message: "Logged in successfully",
+          user: {id: user._id, name: user.name, email: user.email, isAdmin: user.isAdmin},
           token,
       });
   } catch (error) {
@@ -101,19 +103,25 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 });
 
-// Get currently logged-in user data
+// @desc    Get currently logged-in user data 
+// @route   GET /api/users/me
+// @access  Admin
 const recieveLoggedInUser = asyncHandler(async (req, res) => {
-    const { _id, name, email } = await userModel.findById(req.user.id); 
+    if (!req.isAdmin) {
+        return res.status(403>json({message: "Admins Only. Access denied."}))
+    }
+    const { _id, name, email } = await User.findById(req.user.id);
     res.status(200).json({
-        id: _id, 
-        name, 
-        email, 
-    }); 
-}); 
+      id: _id,
+      name,
+      email,
+    });
+});
 
-// Admin login 
+// @desc    Admin Login
+// @route   POST /api/admin/adminlogin
 const adminLogin = asyncHandler (async (req, res) => {
-    const {email, password} = req.body 
+    const {email, password, isAdmin} = req.body 
 
     try {
         // Check for user by email
@@ -134,7 +142,7 @@ const adminLogin = asyncHandler (async (req, res) => {
         }
 
         // Generate JWT token
-        const token = generateToken(user._id);
+        const token = generateToken(user._id, user.isAdmin);
 
         // Respond with success message and token
         res.json({
