@@ -14,6 +14,9 @@ app.get("/", (request, response) => {
     });
 });
 
+const UserRouter = require("./routes/UserRoute");
+app.use("user", UserRouter);
+
 module.exports = {
     app
 }
