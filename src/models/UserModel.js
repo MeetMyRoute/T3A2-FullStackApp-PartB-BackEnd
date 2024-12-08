@@ -16,7 +16,8 @@ const UserSchema = mongoose.Schema({
     name: {
         type: String,
         required: true,
-        trim: true
+        trim: true,
+        minLength: 2
     },
     location: {
         type: String,
@@ -28,13 +29,18 @@ const UserSchema = mongoose.Schema({
         required: true,
         enum: ["Private", "Travelling", "Local"]
     },
+    profilePic: {
+        data: Buffer,
+        contentType: String
+    },
     travelPreferencesAndGoals: {
         type: [String]
     },
     socialMediaLink: {
-        type: String
+        type: String,
+        match: /^(?:(?:https?|ftp):\/\/)?(?:www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)+[^\s]*$/i
     },
-})
+});
 
 const UserModel = mongoose.model("User", UserSchema)
 
