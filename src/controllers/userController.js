@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const asyncHandler = require("express-async-handler"); 
 const jwt = require("jsonwebtoken");
+const nodemailer = require ("nodemailer"); 
 const { userModel } = require('../model/userModel');
 
 // Generate JWT Token
@@ -108,9 +109,9 @@ const loginUser = asyncHandler(async (req, res) => {
 // @access  Admin
 const recieveLoggedInUser = asyncHandler(async (req, res) => {
     if (!req.isAdmin) {
-        return res.status(403>json({message: "Admins Only. Access denied."}))
+        return res.status(403).json({message: "Admins Only. Access denied."}); 
     }
-    const { _id, name, email } = await User.findById(req.user.id);
+    const { _id, name, email } = await userModel.findById(req.user.id);
     res.status(200).json({
       id: _id,
       name,
@@ -156,11 +157,112 @@ const adminLogin = asyncHandler (async (req, res) => {
     }
 }); 
 
-/// RESET PASSWORD!
+// @desc    Password reset email 
+// @route   api/users/forgetPassword
+// @route   api/users/resetPassword
+const passwordResetEmail = (token) => `
+    <h1>Reset Your Password</h1>
+    <p>Click on the following link to reset your password:</p>
+    <a href="${process.env.FRONTEND_URL}/reset-password/${token}">Reset Password</a>
+    <p>The link above will expire in 10 minutes. If you didn't request this password reset, please ignore this email.</p>
+`;
+
+const forgetPassword = asyncHandler (async (req, res) => {
+    const {email} = req.body; 
+
+    // Check if email is provided 
+    if (!email) {
+        return res.status(400).json({message: "Please provide an email address"}); 
+    }
+
+    try {
+        // Find the user by email
+        const user = await userModel.findOne ({email}); 
+        if (!user) {
+            return res.status(404).json({message: "User not found"}); 
+        }
+
+        // Generate a unique JWT token for password reset
+        const token = jwt.sign({userId: user._id}, process.env.JWT_RESET_PASSWORD_SECRET, {expiresIn: '10m'}); 
+
+        // Configure the email transporter 
+        const emailSender = nodemailer.createTransport ({
+            service: "gmail", 
+            auth: {
+                user: process.env.EMAIL, 
+                pass: process.env.EMAIL_PASS,
+            }, 
+        }); 
+
+        // Define email content
+        const mailFormat = {
+            from: process.env.EMAIL,  
+            to: req.body.email, 
+            subject: "Reset Password", 
+            html: passwordResetEmail(token), 
+        }; 
+
+        // Send the email
+        await emailSender.sendMail(mailFormat);
+
+        // Respond with a success message
+        res.status(200).json({ message: "If a user with that email exists, a password reset link has been sent." });
+    } catch (error) {
+        console.error("Error during forget password process:", error);
+        res.status(500).json({ message: "An error occurred. Please try again later." });
+    }
+}); 
+
+const resetPassword = asyncHandler(async (req, res) => {
+    const { newPassword } = req.body;
+    const { token } = req.params;
+
+    // Validate new password
+    if (!newPassword || typeof newPassword !== 'string') {
+        return res.status(400).json({ message: "Invalid password format."});
+    }
+
+    try {
+        // Verify the token
+        const decodedToken = jwt.verify(token, process.env.JWT_RESET_PASSWORD_SECRET);
+
+        if (!decodedToken || !decodedToken.userId) {
+            return res.status(401).json({ message: "Invalid or expired token." });
+        }
+
+        // Find the user by ID from the token
+        const user = await userModel.findById(decodedToken.userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        // Hash the new password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        // Update user's password
+        user.password = hashedPassword;
+        await user.save();
+
+        // Send success response
+        res.status(200).json({ message: "Password has been reset successfully." });
+
+    } catch (error) {
+        console.error("Error during password reset:", error);
+
+        // Distinguish between token expiration and other errors
+        if (error.name === "TokenExpiredError") {
+            return res.status(401).json({ message: "Token has expired. Please request a new password reset." });
+        }
+        res.status(500).json({ message: "An error occurred. Please try again later." });
+    }
+});
 
 module.exports = {
     registerUser,
     loginUser,
     recieveLoggedInUser, 
-    adminLogin
+    adminLogin, 
+    forgetPassword, 
+    resetPassword
 };
