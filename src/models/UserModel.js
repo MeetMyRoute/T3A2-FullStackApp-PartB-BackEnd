@@ -38,7 +38,7 @@ const UserSchema = mongoose.Schema({
     },
     socialMediaLink: {
         type: String,
-        match: /^(?:(?:https?|ftp):\/\/)?(?:www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)+[^\s]*$/i
+        match: /^(?:https?:\/\/)?(?:www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)+[^\s]*$/
     },
 });
 
