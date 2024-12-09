@@ -98,35 +98,6 @@ const getSimplifiedItineraries = async(response, request) => {
     }
 }
 
-// Get all shared (simplified) itineraries excluding the user's
-const getSharedItineraries = async(response, request) => {
-    try {
-        // Find itineraries that do not belong to the user
-        const itineraries = await ItineraryModel.find(
-            {userId: {$ne: request.user._id}},
-            "destination startDate endDate"
-        ).populate("userId", "name");
-
-        // Check if there are any shared itineraries
-        if (!itineraries.length) {
-            return response.status(404).json({
-                message: "No shared itineraries found"
-            });
-        }
-
-        // Respond with the shared itineraries data
-        return response.status(200).json({
-            message: "Shared itineraries retrieved successfully",
-            data: itineraries
-        });
-    } catch(error) {
-        return response.status(500).json({
-            message: "Error retrieving shared itineraries",
-            error
-        });
-    }
-}
-
 // Get shared (simplified) itineraries excluding the user's by filters: destination, startDate and endDate
 const getSharedItinerariesByFilters = async(response, request) => {
     try {
@@ -301,7 +272,6 @@ module.exports = {
     createItinerary,
     getItineraries,
     getSimplifiedItineraries,
-    getSharedItineraries,
     getSharedItinerariesByUser,
     getSharedItinerariesByFilters,
     updateItinerary,
