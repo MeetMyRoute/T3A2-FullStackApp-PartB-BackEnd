@@ -15,7 +15,10 @@ app.get("/", (request, response) => {
 });
 
 const ProfileRouter = require("./routes/ProfileRoute");
-app.use("profile", ProfileRouter);
+app.use("/profile", ProfileRouter);
+
+const ItineraryRouter = require("./routes/ItineraryRoute");
+app.use("/itinerary", ItineraryRouter);
 
 module.exports = {
     app
