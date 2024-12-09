@@ -47,24 +47,30 @@ const seedUsers = async () => {
     }
 };
 
-// const dbSeed = async () => {
-//     try {
-//         // Connect to the database
-//         await dbConnect();
+const dbSeed = async () => {
+    console.log('Initializing database seed process...');
 
-//         // Reset the database
-//         await dbDrop();
+    try {
+        // Connect to the database
+        console.log('Connecting to the database...');
+        await dbConnect();
 
-//         // Seed users
-//         const users = await seedUsers();
+        // Drop the database collections
+        console.log('Resetting the database...');
+        await dbDrop();
 
-//         console.log("Database seeded successfully");
-//     } catch (error) {
-//         console.log("Error seeding database: ", error.message);
-//     } finally {
-//         // Disconnect from the database in all cases
-//         await dbDisconnect();
-//     }
-// };
+        // Seed users
+        console.log('Seeding users...');
+        const users = await seedUsers();
+
+    } catch (error) {
+        console.error('Error during the database seed process:', error.message);
+    } finally {
+        // Disconnect from the database
+        console.log('Disconnecting from the database...');
+        await dbDisconnect();
+        console.log('Database seed process completed.');
+    }
+};
 
 dbSeed();
