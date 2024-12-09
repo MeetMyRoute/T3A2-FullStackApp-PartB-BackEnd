@@ -106,11 +106,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
 // @desc    Get currently logged-in user data 
 // @route   GET /api/users/me
-// @access  Admin
 const recieveLoggedInUser = asyncHandler(async (req, res) => {
-    if (!req.isAdmin) {
-        return res.status(403).json({message: "Admins Only. Access denied."}); 
-    }
     const { _id, name, email } = await userModel.findById(req.user.id);
     res.status(200).json({
       id: _id,
