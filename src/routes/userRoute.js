@@ -16,7 +16,7 @@ router.post("/", registerUser);
 // Route to log in an existing user and generate a token
 router.post("/login", loginUser);
 // Route to log in admin user and generate a token 
-router.post("/admin", auth, adminLogin)
+router.post("/adminLogin",adminLogin);
 // Route to fetch the currently logged-in user's information
 router.get("/me", auth, recieveLoggedInUser);
 // Route to handle forgotten password requests
