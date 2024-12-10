@@ -11,6 +11,24 @@ const generateToken = (id, isAdmin) => {
     });
   };
 
+// @desc    Get all users (Admin only)
+// @route   GET /api/users
+const getAllUsers = asyncHandler(async (req, res) => {
+    try {
+        // Check if the logged-in user is an admin
+        if (!req.user.isAdmin) {
+            return res.status(403).json({ message: "Admins only. Access denied." });
+        }
+
+        // Fetch all users from the database
+        const users = await UserModel.find({}).select("-password"); 
+        res.status(200).json(users);
+    } catch (error) {
+        console.error("Error fetching users:", error);
+        res.status(500).json({ message: "An error occurred while fetching users." });
+    }
+});
+
 // @desc    Register new user
 // @route   POST /api/users
 const registerUser = asyncHandler(async (req, res) => {
@@ -257,6 +275,7 @@ const resetPassword = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
+    getAllUsers, 
     registerUser,
     loginUser,
     recieveLoggedInUser, 
