@@ -77,7 +77,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
   try {
       // Check for user by email
-      const user = await userModel.findOne({ email });
+      const user = await userModel.findOne({ email: email});
 
       if (!user) {
           return res.status(401).json({ message: "Invalid credentials" });
@@ -118,13 +118,13 @@ const recieveLoggedInUser = asyncHandler(async (req, res) => {
 // @desc    Admin Login
 // @route   POST /api/admin/adminlogin
 const adminLogin = asyncHandler (async (req, res) => {
-    const {email, password, isAdmin} = req.body 
+    const {email, password} = req.body 
 
     try {
         // Check for user by email
         const user = await userModel.findOne({email}); 
         if (!user) {
-            return res.status(401).json({message: "Invalid username or password"}); 
+            return res.status(401).json({message: "Invalid email or password"}); 
         }
 
         // Check if user is an admin
@@ -180,6 +180,8 @@ const forgetPassword = asyncHandler (async (req, res) => {
 
         // Generate a unique JWT token for password reset
         const token = jwt.sign({userId: user._id}, process.env.JWT_RESET_PASSWORD_SECRET, {expiresIn: '10m'}); 
+
+        console.log("Generated Token:", token);
 
         // Configure the email transporter 
         const emailSender = nodemailer.createTransport ({
