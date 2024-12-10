@@ -34,6 +34,10 @@ const UserSchema = mongoose.Schema({
     socialMediaLink: {
         type: String
     },
+    isAdmin: { 
+        type: Boolean,
+        default: false
+    }
 })
 
 const userModel = mongoose.model("User", UserSchema)
