@@ -16,7 +16,8 @@ app.get("/", (request, response) => {
 
 const ProfileRouter = require("./routes/ProfileRoute");
 app.use("profile", ProfileRouter);
-app.use('/api/users', require('./routes/userRoute')); 
+app.use('/api/users', require('./routes/userRoute'));
+app.use('/api/admin', require('./routes/userRoute'));
 
 module.exports = {
     app
