@@ -11,24 +11,40 @@ const seedUsers = async () => {
             email: "jessicaturner@example.com",
             password: "password123", 
             isAdmin: false,
+            location: "New York", 
+            status: "Local", 
+            travelPreferencesAndGoals: ["Beach", "Adventure"], 
+            socialMediaLink: "https://facebook.com/jessicaturner" 
         },
         {
             name: "Josh Smith",
             email: "joshsmith@example.com",
             password: "password456", 
             isAdmin: false,
+            location: "Los Angeles",
+            status: "Travelling",
+            travelPreferencesAndGoals: ["City Tours"],
+            socialMediaLink: "https://twitter.com/joshsmith"
         },
         {
             name: "Alice Turner",
             email: "aliceturner@example.com",
             password: "mypassword789", 
             isAdmin: false,
+            location: "San Francisco",
+            status: "Private",
+            travelPreferencesAndGoals: ["Mountain Hiking"],
+            socialMediaLink: "https://instagram.com/aliceturner"
         },
         {
             name: "Kate Salmon",
-            email: "katesalmonexample.com",
+            email: "katesalmon@example.com",
             password: "securepass123",
             isAdmin: true,
+            location: "London",
+            status: "Local",
+            travelPreferencesAndGoals: ["Cultural Experiences"],
+            socialMediaLink: "https://linkedin.com/katesalmon"
         },
     ];
 
@@ -41,6 +57,7 @@ const seedUsers = async () => {
 
         // Insert users into the database
         const createdUsers = await userModel.insertMany(users);
+
         return createdUsers;
     } catch (error) {
         throw error;
@@ -48,8 +65,6 @@ const seedUsers = async () => {
 };
 
 const dbSeed = async () => {
-    console.log('Initializing database seed process...');
-
     try {
         // Connect to the database
         console.log('Connecting to the database...');
