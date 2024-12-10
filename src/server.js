@@ -23,9 +23,6 @@ app.use("/itinerary", ItineraryRouter);
 const UserRouter = require('./routes/userRoute'); 
 app.use('/api/users', UserRouter); 
 
-const AdminRouter = require ('./routes/userRoute'); 
-app.use('/api/admin', AdminRouter); 
-
 module.exports = {
     app
 }

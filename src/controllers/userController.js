@@ -2,7 +2,7 @@ const bcrypt = require("bcryptjs");
 const asyncHandler = require("express-async-handler"); 
 const jwt = require("jsonwebtoken");
 const nodemailer = require ("nodemailer"); 
-const { userModel } = require('../model/userModel');
+const { UserModel } = require('../models/UserModel');
 
 // Generate JWT Token
 const generateToken = (id, isAdmin) => {
@@ -23,7 +23,7 @@ const registerUser = asyncHandler(async (req, res) => {
       }
 
       // Check if user already exists
-      const userExists = await userModel.findOne({ email });
+      const userExists = await UserModel.findOne({ email });
       if (userExists) {
           return res.status(400).json({ message: "User already exists" });
       }
@@ -33,7 +33,7 @@ const registerUser = asyncHandler(async (req, res) => {
       const hashedPassword = await bcrypt.hash(password, salt);
 
       // Create a new user
-      const newUser = await userModel.create({
+      const newUser = await UserModel.create({
           name,
           email,
           password: hashedPassword,
@@ -77,7 +77,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
   try {
       // Check for user by email
-      const user = await userModel.findOne({ email: email});
+      const user = await UserModel.findOne({ email: email});
 
       if (!user) {
           return res.status(401).json({ message: "Invalid credentials" });
@@ -107,7 +107,7 @@ const loginUser = asyncHandler(async (req, res) => {
 // @desc    Get currently logged-in user data 
 // @route   GET /api/users/me
 const recieveLoggedInUser = asyncHandler(async (req, res) => {
-    const { _id, name, email } = await userModel.findById(req.user.id);
+    const { _id, name, email } = await UserModel.findById(req.user.id);
     res.status(200).json({
       id: _id,
       name,
@@ -122,7 +122,7 @@ const adminLogin = asyncHandler (async (req, res) => {
 
     try {
         // Check for user by email
-        const user = await userModel.findOne({email}); 
+        const user = await UserModel.findOne({email}); 
         if (!user) {
             return res.status(401).json({message: "Invalid email or password"}); 
         }
@@ -173,7 +173,7 @@ const forgetPassword = asyncHandler (async (req, res) => {
 
     try {
         // Find the user by email
-        const user = await userModel.findOne ({email}); 
+        const user = await UserModel.findOne ({email}); 
         if (!user) {
             return res.status(404).json({message: "User not found"}); 
         }
@@ -229,7 +229,7 @@ const resetPassword = asyncHandler(async (req, res) => {
         }
 
         // Find the user by ID from the token
-        const user = await userModel.findById(decodedToken.userId);
+        const user = await UserModel.findById(decodedToken.userId);
         if (!user) {
             return res.status(404).json({ message: "User not found." });
         }

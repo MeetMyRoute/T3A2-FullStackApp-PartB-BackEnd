@@ -1,4 +1,4 @@
-const { userModel } = require('../model/userModel');
+const { UserModel } = require('../models/UserModel');
 const { dbConnect,dbDisconnect,dbDrop } = require("./database");
 const bcrypt = require('bcryptjs');
 
@@ -56,7 +56,7 @@ const seedUsers = async () => {
         }
 
         // Insert users into the database
-        const createdUsers = await userModel.insertMany(users);
+        const createdUsers = await UserModel.insertMany(users);
 
         return createdUsers;
     } catch (error) {

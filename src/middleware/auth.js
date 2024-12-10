@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const asyncHandler = require("express-async-handler");
-const { userModel } = require('../model/userModel');
+const { UserModel } = require('../models/UserModel');
 
 const auth = asyncHandler (async (req, res, next) => {
     let token; 
@@ -13,7 +13,7 @@ const auth = asyncHandler (async (req, res, next) => {
             const decoded = jwt.verify(token, process.env.SECRET_ACCESS_TOKEN); 
 
             // Get user from the token 
-            req.user = await userModel.findById(decoded.id).select("-password"); 
+            req.user = await UserModel.findById(decoded.id).select("-password"); 
 
             // Check if the user is an admin and attach to the request
             req.isAdmin = decoded.isAdmin || false;
