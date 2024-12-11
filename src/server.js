@@ -20,8 +20,8 @@ app.use("/profile", ProfileRouter);
 const ItineraryRouter = require("./routes/ItineraryRoute");
 app.use("/itinerary", ItineraryRouter);
 
-const UserRouter = require('./routes/userRoute'); 
-app.use('/api/users', UserRouter); 
+const UserRouter = require('./routes/UserRoute'); 
+app.use('/user', UserRouter);
 
 module.exports = {
     app
