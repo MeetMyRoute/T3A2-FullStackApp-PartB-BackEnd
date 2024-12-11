@@ -3,7 +3,7 @@ require("dotenv").config();
 const { dbConnect } = require("./utils/database.js");
 const {app} = require("./server.js");
 
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.PORT || 4000;
 
 app.listen(PORT, async() => {
     await dbConnect();
