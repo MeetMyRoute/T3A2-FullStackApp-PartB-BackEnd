@@ -1,29 +1,29 @@
-const {request, response } = require("express");
+const {req, res } = require("express");
 const { UserModel } = require("../models/UserModel");
 
 // Get a user profile
-const getProfile = async (request, response) => {
+const getProfile = async (req, res) => {
     try {
         // Get the user ID from the URL parameters
-        const {id} = request.params;
+        const {id} = req.params;
 
         // Find user profile that belong to the user ID
         const user = await UserModel.findById(id);
 
         // Check if user ID exists
         if (!user) {
-            return response.status(404).json({
+            return res.status(404).json({
                 message: "User not found"
             })
         }
 
         // Respond with the found user profile
-        response.status(200).json({
+        res.status(200).json({
             message: "User profile retrieved successfully",
             data: user
         });
     } catch (error) {
-        response.status(500).json({
+        res.status(500).json({
             message: "Error retrieving user profile",
             error 
         });
@@ -31,19 +31,19 @@ const getProfile = async (request, response) => {
 }
 
 // Update details of user profile
-const updateProfile = async (request, response) => {
+const updateProfile = async (req, res) => {
     try {
         // Get the user ID from the URL parameters
-        const {id} = request.params;
+        const {id} = req.params;
         // Get data to update from the request body
-        const {name, location, status, travelPreferencesAndGoals, socialMediaLink} = request.body;
+        const {name, location, status, travelPreferencesAndGoals, socialMediaLink} = req.body;
 
         // Get user ID from JWT token
-        const loggedInUserId = request.user.id;
+        const loggedInUserId = req.user.id;
 
         // Check if logged in user ID matches user ID from the URL parameters
         if (loggedInUserId !== id) {
-            return response.status(403).json({
+            return res.status(403).json({
                 message: "User not authorised"
             });
         }
@@ -53,7 +53,7 @@ const updateProfile = async (request, response) => {
 
         // Check if user ID exists
         if (!user) {
-            return response.status(404).json({
+            return res.status(404).json({
                 message: "User not found"
             })
         }
@@ -69,12 +69,12 @@ const updateProfile = async (request, response) => {
         const updatedUser = await user.save();
 
         // Respond with the updated user profile
-        return response.status(200).json({
+        return res.status(200).json({
             message: "User profile updated successfully",
             data: updatedUser
         })
     } catch (error) {
-        response.status(500).json({
+        res.status(500).json({
             message: "Error updated user profile",
             error 
         });
