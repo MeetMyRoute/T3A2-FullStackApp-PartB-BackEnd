@@ -8,8 +8,8 @@ app.use(cors());
 app.use(express.json());
 
 // Test basic route
-app.get("/", (request, response) => {
-    response.json({
+app.get("/", (req, res) => {
+    res.json({
         message: "MeetMyRoute"
     });
 });
