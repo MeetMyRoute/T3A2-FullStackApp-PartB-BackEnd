@@ -1,6 +1,6 @@
 const { res, req } = require("express");
-const Itinerary = require("../models/ItineraryModel");
 const validateDates = require("../middleware/itinerary");
+const { ItineraryModel } = require("../models/ItineraryModel");
 
 // Create a new itinerary to the database
 const createItinerary = async(req, res) => {
