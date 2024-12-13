@@ -1,6 +1,7 @@
 const { res, req } = require("express");
 const validateDates = require("../middleware/itinerary");
 const { ItineraryModel } = require("../models/ItineraryModel");
+const { UserModel } = require("../models/UserModel");
 
 // Create a new itinerary to the database
 const createItinerary = async(req, res) => {
@@ -98,55 +99,64 @@ const getSimplifiedItineraries = async(req, res) => {
     }
 }
 
-// Get shared (simplified) itineraries excluding the user's by filters: destination, startDate and endDate
-const getSharedItinerariesByFilters = async(req, res) => {
+// Get shared (simplified) itineraries and local users excluding the user's by filters: destination, startDate and endDate
+const getItinerariesAndUsersByFilters = async(req, res) => {
     try {
         // Extract filters from query params
         const {destination, startDate, endDate} = req.query;
+        const loggedInUserId = req.user.id;
 
-        // Build query dynamically based on provided filters
-        const query = {userId: {$ne: req.user._id}};
-
-        if(destination) {
-            query.destination = {
-                $regex: destination,
-                $options: "i"
-            };
+        if (!destination || !startDate || !endDate) {
+            return res.status(400).json({
+                message: "Destination, start date, and end date are required"
+            })
         }
 
-        if (startDate) {
-            query.startDate = {
-                $gte: new Date(startDate)
-            }
-        }
+        // Query for itineraries excluding the user's and matching the filters
+        const itineraries = await ItineraryModel.find({
+            userId: {$ne: loggedInUserId},
+            destination,
+            startDate: {$gte: start},
+            endDate: {$lte: end}
+        }).populate("userId", "name status");
 
-        if (endDate) {
-            query.endDate = {
-                $lte: new Date(endDate)
-            }
-        }
-
-        // Fetch itineraries matching the query and include user details
-        const itineraries = await ItineraryModel.find(
-            query,
-            "destination startDate endDate"
-        ).populate("userId", "name");
+        // Query for local users at the destination
+        const localUsers = await UserModel.find({
+            _id: {$ne: loggedInUserId},
+            location: destination,
+            status: "Local"
+        }).select("name location status");
         
-        // Check if any itineraries match the filters
-        if (!itineraries.length) {
+        // Check if any itineraries and users match the filters
+        if (!itineraries.length && !localUsers.length) {
             return res.status(404).json({
-                message: "No matching itineraries found"
+                message: "No matching itineraries and locals found"
             });
         }
 
+        // Format the results
+        const results = [
+            ...itineraries.map((itinerary) => ({
+                user: itinerary.userId.name,
+                destination: itinerary.destination,
+                startDate: itinerary.startDate,
+                endDate: itinerary.endDate
+            })),
+            ...localUsers.map((user) => ({
+                user: user.name,
+                location: user.location,
+                status: user.status
+            }))
+        ]
+
         // Respond with the filtered itineraries
         return res.status(200).json({
-            message: "Filtered shared itineraries retrieved successfully",
-            data: itineraries
+            message: "Filtered shared itineraries/local users retrieved successfully",
+            data: results
         });
     } catch(error) {
         return res.status(500).json({
-            message: "Error retrieving filtered shared itineraries:",
+            message: "Error retrieving filtered shared itineraries/local users:",
             error
         });
     }
@@ -274,7 +284,7 @@ module.exports = {
     getItineraries,
     getSimplifiedItineraries,
     getSharedItinerariesByUser,
-    getSharedItinerariesByFilters,
+    getItinerariesAndUsersByFilters,
     updateItinerary,
     deleteItinerary
 }
