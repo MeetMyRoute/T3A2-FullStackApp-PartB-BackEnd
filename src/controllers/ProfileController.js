@@ -1,5 +1,6 @@
-const {req, res } = require("express");
+const { req, res } = require("express");
 const { UserModel } = require("../models/UserModel");
+const { ItineraryModel } = require("../models/ItineraryModel");
 
 // Get a user profile
 const getProfile = async (req, res) => {
@@ -21,7 +22,7 @@ const getProfile = async (req, res) => {
         // Check if status is set to Private
         // If it is, return error
         if (user.status == "Private") {
-            return response.status(403).json({
+            return res.status(403).json({
                 message: "User profile is private"
             })
         }
@@ -36,6 +37,16 @@ const getProfile = async (req, res) => {
             profilePicUrl = `data:${user.profilePic.contentType};base64,${base64Image}`;
         }
 
+        // Find itineraries belonging to the user
+        const itineraries = await ItineraryModel.find({userId: id}).select("destination startDate endDate");
+
+        // Format itineraries
+        const formattedItineraries = itineraries.map(itinerary => ({
+            destination: itinerary.destination,
+            startDate: itinerary.startDate,
+            endDate: itinerary.endDate
+        }));
+
         // Respond with the found user profile
         res.status(200).json({
             message: "User profile retrieved successfully",
@@ -45,12 +56,13 @@ const getProfile = async (req, res) => {
                 status: user.status,
                 profilePic: profilePicUrl,
                 travelPreferencesAndGoals: user.travelPreferencesAndGoals,
-                socialMediaLink: user.socialMediaLink
+                socialMediaLink: user.socialMediaLink,
+                itineraries: formattedItineraries
             }
         });
     } catch (error) {
         res.status(500).json({
-            message: "Error retrieving user profile",
+            message: "Error retrieving user profile:",
             error 
         });
     }
@@ -62,7 +74,7 @@ const updateProfile = async (req, res) => {
         // Get the user ID from the URL parameters
         const {id} = req.params;
         // Get data to update from the request body
-        const {name, location, status, travelPreferencesAndGoals, socialMediaLink} = request.body;
+        const {name, location, status, travelPreferencesAndGoals, socialMediaLink} = req.body;
 
         // Get user ID from JWT token
         const loggedInUserId = req.user.id;
@@ -103,7 +115,7 @@ const updateProfile = async (req, res) => {
                 // Update field
                 user.profilePic = {data: buffer, contentType: mimeType}
             } else {
-                return response.status(400).json({
+                return res.status(400).json({
                     message: "Invalid image format"
                 })
             }
@@ -119,7 +131,7 @@ const updateProfile = async (req, res) => {
         })
     } catch (error) {
         res.status(500).json({
-            message: "Error updated user profile",
+            message: "Error updated user profile:",
             error 
         });
     }

@@ -162,45 +162,6 @@ const getItinerariesAndUsersByFilters = async(req, res) => {
     }
 }
 
-// Get shared (simplified) itineraries by a specific user
-const getSharedItinerariesByUser = async(req, res) => {
-    try {
-        // Get the user ID from the URL parameters
-        const {userId} = req.params;
-
-        // Ensure the user's itineraries are excluded
-        if (userId === req.user._id.toString()) {
-            return res.status(400).json({
-                message: "Cannot retrieve your own itineraries using this endpoint"
-            });
-        }
-
-        // Fetch itineraries owned by the specific user
-        const itineraries = await ItineraryModel.find(
-            {userId},
-            "destination startDate endDate"
-        )
-
-        // Check if there are any itineraries for the specified user
-        if (!itineraries.length) {
-            return res.status(404).json({
-                message: "No itineraries found for the specified user"
-            });
-        }
-
-        // Respond with the filtered itineraries
-        return res.status(200).json({
-            message: "Itineraries retrieved successfully",
-            data: itineraries
-        });
-    } catch(error) {
-        return res.status(500).json({
-            message: "Error retrieving itineraries by user:",
-            error
-        });
-    }
-}
-
 // Update details of a specific itinerary
 const updateItinerary = async(req, res) => {
     try {
@@ -283,7 +244,6 @@ module.exports = {
     createItinerary,
     getItineraries,
     getSimplifiedItineraries,
-    getSharedItinerariesByUser,
     getItinerariesAndUsersByFilters,
     updateItinerary,
     deleteItinerary
