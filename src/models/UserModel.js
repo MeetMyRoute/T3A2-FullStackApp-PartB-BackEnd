@@ -46,6 +46,9 @@ const UserSchema = mongoose.Schema({
     }
 });
 
+// Add compound index
+UserSchema.index({location: 1, status: 1});
+
 const UserModel = mongoose.model("User", UserSchema)
 
 module.exports = {
