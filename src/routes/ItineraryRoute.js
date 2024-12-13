@@ -12,9 +12,6 @@ router.get("/", auth, getItineraries);
 // Route for getting all simplified itineraries owned by the user
 router.get("/simplified", auth, getSimplifiedItineraries);
 
-// Route for getting shared (simplified) itineraries and local users excluding the user's by filters: destination, startDate and endDate
-router.get("/search", auth, getItinerariesAndUsersByFilters);
-
 // Route for updating details of a specific itinerary
 router.put("/:id", auth, updateItinerary);
 

@@ -23,6 +23,9 @@ app.use("/itinerary", ItineraryRouter);
 const UserRouter = require('./routes/UserRoute'); 
 app.use('/user', UserRouter);
 
+const SearchRouter = require("./routes/SearchRoute");
+app.use("/search", SearchRouter);
+
 module.exports = {
     app
 }
