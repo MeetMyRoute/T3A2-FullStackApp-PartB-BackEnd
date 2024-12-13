@@ -1,5 +1,6 @@
-const {req, res } = require("express");
+const { req, res } = require("express");
 const { UserModel } = require("../models/UserModel");
+const { ItineraryModel } = require("../models/ItineraryModel");
 
 // Get a user profile
 const getProfile = async (req, res) => {
@@ -10,21 +11,58 @@ const getProfile = async (req, res) => {
         // Find user profile that belong to the user ID
         const user = await UserModel.findById(id);
 
-        // Check if user ID exists
+        // Check if the user ID exists
+        // If it does not, return error
         if (!user) {
             return res.status(404).json({
                 message: "User not found"
             })
         }
 
+        // Check if status is set to Private
+        // If it is, return error
+        if (user.status == "Private") {
+            return res.status(403).json({
+                message: "User profile is private"
+            })
+        }
+
+        // Check if a profile pic exists
+        // If it does, convert it to Base64
+        let profilePicUrl = null;
+        if (user.profilePic) {
+            // Convert the Buffer binary data to a Base64 string
+            const base64Image = user.profilePic.toString("base64");
+            // Create a data URL format
+            profilePicUrl = `data:${user.profilePic.contentType};base64,${base64Image}`;
+        }
+
+        // Find itineraries belonging to the user
+        const itineraries = await ItineraryModel.find({userId: id}).select("destination startDate endDate");
+
+        // Format itineraries
+        const formattedItineraries = itineraries.map(itinerary => ({
+            destination: itinerary.destination,
+            startDate: itinerary.startDate,
+            endDate: itinerary.endDate
+        }));
+
         // Respond with the found user profile
         res.status(200).json({
             message: "User profile retrieved successfully",
-            data: user
+            data: {
+                name: user.name,
+                location: user.location, 
+                status: user.status,
+                profilePic: profilePicUrl,
+                travelPreferencesAndGoals: user.travelPreferencesAndGoals,
+                socialMediaLink: user.socialMediaLink,
+                itineraries: formattedItineraries
+            }
         });
     } catch (error) {
         res.status(500).json({
-            message: "Error retrieving user profile",
+            message: "Error retrieving user profile:",
             error 
         });
     }
@@ -65,6 +103,24 @@ const updateProfile = async (req, res) => {
         user.travelPreferencesAndGoals = travelPreferencesAndGoals || user.travelPreferencesAndGoals;
         user.socialMediaLink = socialMediaLink || user.socialMediaLink;
 
+        // If new data is provided for profilePic, convert it into a Buffer object
+        if (profilePic) {
+            // Extract MIME type
+            const matches = profilePic.match(/^data:(.+);base64,/);
+            if (matches && matches[1]) {
+                const mimeType = matches[1];
+                const base64Data = profilePic.replace(/^data:.+;base64,/, '');
+                const buffer = Buffer.from(base64Data, "base64");
+
+                // Update field
+                user.profilePic = {data: buffer, contentType: mimeType}
+            } else {
+                return res.status(400).json({
+                    message: "Invalid image format"
+                })
+            }
+        }
+
         // Save updated user profile
         const updatedUser = await user.save();
 
@@ -75,7 +131,7 @@ const updateProfile = async (req, res) => {
         })
     } catch (error) {
         res.status(500).json({
-            message: "Error updated user profile",
+            message: "Error updated user profile:",
             error 
         });
     }
