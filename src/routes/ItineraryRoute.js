@@ -1,5 +1,5 @@
 const express = require("express");
-const { createItinerary, getItineraries, getSimplifiedItineraries, getSharedItinerariesByUser, deleteItinerary, updateItinerary, getSharedItinerariesByFilters } = require("../controllers/ItineraryController");
+const { createItinerary, getItineraries, getSimplifiedItineraries, getSharedItinerariesByUser, deleteItinerary, updateItinerary, getItinerariesAndUsersByFilters } = require("../controllers/ItineraryController");
 const { auth } = require("../middleware/auth");
 const router = express.Router();
 
@@ -12,8 +12,8 @@ router.get("/", auth, getItineraries);
 // Route for getting all simplified itineraries owned by the user
 router.get("/simplified", auth, getSimplifiedItineraries);
 
-// Route for getting shared (simplified) itineraries excluding the user's by filters: destination, startDate and endDate
-router.get("/search/filtered", auth, getSharedItinerariesByFilters);
+// Route for getting shared (simplified) itineraries and local users excluding the user's by filters: destination, startDate and endDate
+router.get("/search", auth, getItinerariesAndUsersByFilters);
 
 // Route for getting shared (simplified) itineraries by a specific user
 router.get("/user/:userId", auth, getSharedItinerariesByUser);
