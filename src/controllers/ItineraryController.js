@@ -116,16 +116,16 @@ const getItinerariesAndUsersByFilters = async(req, res) => {
         const itineraries = await ItineraryModel.find({
             userId: {$ne: loggedInUserId},
             destination,
-            startDate: {$gte: start},
-            endDate: {$lte: end}
-        }).populate("userId", "name status");
+            startDate: {$gte: startDate},
+            endDate: {$lte: endDate}
+        }).populate("userId", "name status profilePic");
 
         // Query for local users at the destination
         const localUsers = await UserModel.find({
             _id: {$ne: loggedInUserId},
             location: destination,
             status: "Local"
-        }).select("name location status");
+        }).select("name location status profilePic");
         
         // Check if any itineraries and users match the filters
         if (!itineraries.length && !localUsers.length) {
@@ -136,17 +136,33 @@ const getItinerariesAndUsersByFilters = async(req, res) => {
 
         // Format the results
         const results = [
-            ...itineraries.map((itinerary) => ({
-                user: itinerary.userId.name,
-                destination: itinerary.destination,
-                startDate: itinerary.startDate,
-                endDate: itinerary.endDate
-            })),
-            ...localUsers.map((user) => ({
-                user: user.name,
-                location: user.location,
-                status: user.status
-            }))
+            ...itineraries.map((itinerary) => {
+                let profilePicUrl = null;
+                if (itinerary.userId.profilePic?.data) {
+                    const base64Image = itinerary.userId.profilePic.data.toString("base64");
+                    profilePicUrl = `data:${itinerary.userId.profilePic.contentType};base64,${base64Image}`;
+                }
+                return {
+                    user: itinerary.userId.name,
+                    profilePic: profilePicUrl,
+                    destination: itinerary.destination,
+                    startDate: itinerary.startDate,
+                    endDate: itinerary.endDate
+                }
+            }),
+            ...localUsers.map((user) => {
+                let profilePicUrl = null;
+                if (user.profilePic?.data) {
+                    const base64Image = user.profilePic.data.toString("base64");
+                    profilePicUrl = `data${user.profilePic.contentType};base64,${base64Image}`;
+                }
+                return {
+                    user: user.name,
+                    location: user.location,
+                    status: user.status,
+                    profilePic: profilePicUrl
+                }
+            })
         ]
 
         // Respond with the filtered itineraries
