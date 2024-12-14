@@ -144,6 +144,7 @@ const getItinerariesAndUsersByFilters = async(req, res) => {
                 }
                 return {
                     user: itinerary.userId.name,
+                    status: itinerary.userId.status,
                     profilePic: profilePicUrl,
                     destination: itinerary.destination,
                     startDate: itinerary.startDate,
