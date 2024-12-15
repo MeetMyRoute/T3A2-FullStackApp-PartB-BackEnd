@@ -98,7 +98,7 @@ const loginUser = asyncHandler(async (req, res) => {
       const user = await UserModel.findOne({ email: email});
 
       if (!user) {
-          return res.status(401).json({ message: "Invalid credentials" });
+        return res.status(404).json({ message: "No user found with this email" });
       }
 
       // Compare passwords
