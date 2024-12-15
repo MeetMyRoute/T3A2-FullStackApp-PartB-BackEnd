@@ -176,9 +176,9 @@ const adminLogin = asyncHandler (async (req, res) => {
 // @route   api/users/resetPassword
 const passwordResetEmail = (token) => `
     <h1>Reset Your Password</h1>
-    <p>Click on the following link to reset your password:</p>
-    <a href="${process.env.FRONTEND_URL}/reset-password/${token}">Reset Password</a>
-    <p>The link above will expire in 10 minutes. If you didn't request this password reset, please ignore this email.</p>
+    <p>You requested a password reset. Please use the following token to reset your password:</p>
+    <p><strong>Your reset token:</strong> <span style="font-size: 18px;">${token}</span></p>
+    <p>The token above will expire in 10 minutes. If you didn't request this password reset, please ignore this email.</p>
 `;
 
 const forgetPassword = asyncHandler (async (req, res) => {
@@ -199,8 +199,6 @@ const forgetPassword = asyncHandler (async (req, res) => {
         // Generate a unique JWT token for password reset
         const token = jwt.sign({userId: user._id}, process.env.JWT_RESET_PASSWORD_SECRET, {expiresIn: '10m'}); 
 
-        console.log("Generated Token:", token);
-
         // Configure the email transporter 
         const emailSender = nodemailer.createTransport ({
             service: "gmail", 
@@ -214,7 +212,7 @@ const forgetPassword = asyncHandler (async (req, res) => {
         const mailFormat = {
             from: process.env.EMAIL,  
             to: req.body.email, 
-            subject: "Reset Password", 
+            subject: "Reset Password",  
             html: passwordResetEmail(token), 
         }; 
 
@@ -222,7 +220,10 @@ const forgetPassword = asyncHandler (async (req, res) => {
         await emailSender.sendMail(mailFormat);
 
         // Respond with a success message
-        res.status(200).json({ message: "If a user with that email exists, a password reset link has been sent." });
+        res.status(200).json({ 
+            message: "If a user with that email exists, a password reset link has been sent.", 
+            token: token, 
+        });
     } catch (error) {
         console.error("Error during forget password process:", error);
         res.status(500).json({ message: "An error occurred. Please try again later." });
