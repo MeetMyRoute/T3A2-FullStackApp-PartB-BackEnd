@@ -231,17 +231,16 @@ const forgetPassword = asyncHandler (async (req, res) => {
 }); 
 
 const resetPassword = asyncHandler(async (req, res) => {
-    const { newPassword } = req.body;
-    const { token } = req.params;
+    const { newPassword, resetToken } = req.body;
 
     // Validate new password
-    if (!newPassword || typeof newPassword !== 'string') {
+    if ( !resetToken || !newPassword || typeof newPassword !== 'string') {
         return res.status(400).json({ message: "Invalid password format."});
     }
 
     try {
         // Verify the token
-        const decodedToken = jwt.verify(token, process.env.JWT_RESET_PASSWORD_SECRET);
+        const decodedToken = jwt.verify(resetToken, process.env.JWT_RESET_PASSWORD_SECRET);
 
         if (!decodedToken || !decodedToken.userId) {
             return res.status(401).json({ message: "Invalid or expired token." });
