@@ -25,6 +25,6 @@ router.get("/me", auth, recieveLoggedInUser);
 // Route to handle forgotten password requests
 router.post("/forgetPassword", forgetPassword);
 // Route to handle password reset using a valid token
-router.post("/reset-password/:token", resetPassword);
+router.patch("/reset-password", resetPassword);
 
 module.exports = router;
