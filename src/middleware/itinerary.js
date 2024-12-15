@@ -6,7 +6,7 @@ const validateDates = (startDate, endDate) => {
     const end = new Date(endDate);
 
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-        throw new Error("Invalid date format. Use date format YYYY-MM-DD");
+        throw new Error("Invalid date format. Use date format YYYY-MM-DD.");
     }
 
     if (start > end) {
