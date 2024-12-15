@@ -15,7 +15,7 @@ app.get("/", (request, response) => {
 });
 
 const ProfileRouter = require("./routes/ProfileRoute");
-app.use("profile", ProfileRouter);
+app.use("/profile", ProfileRouter);
 
 module.exports = {
     app
