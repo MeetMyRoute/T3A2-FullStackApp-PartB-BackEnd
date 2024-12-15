@@ -29,16 +29,6 @@ const getProfile = async (req, res) => {
             })
         }
 
-        // Check if a profile pic exists
-        // If it does, convert it to Base64
-        let profilePicUrl = null;
-        if (user.profilePic) {
-            // Convert the Buffer binary data to a Base64 string
-            const base64Image = user.profilePic.toString("base64");
-            // Create a data URL format
-            profilePicUrl = `data:${user.profilePic.contentType};base64,${base64Image}`;
-        }
-
         // Find itineraries belonging to the user
         const itineraries = await ItineraryModel.find({userId: id}).select("destination startDate endDate");
 
@@ -64,7 +54,7 @@ const getProfile = async (req, res) => {
                 name: user.name,
                 location: user.location, 
                 status: user.status,
-                profilePic: profilePicUrl,
+                profilePic: user.profilePic,
                 travelPreferencesAndGoals: user.travelPreferencesAndGoals,
                 socialMediaLink: user.socialMediaLink,
                 itineraries: formattedItineraries
@@ -113,24 +103,6 @@ const updateProfile = async (req, res) => {
         user.profilePic = profilePic || user.profilePic;
         user.travelPreferencesAndGoals = travelPreferencesAndGoals || user.travelPreferencesAndGoals;
         user.socialMediaLink = socialMediaLink || user.socialMediaLink;
-
-        // If new data is provided for profilePic, convert it into a Buffer object
-        if (profilePic) {
-            // Extract MIME type
-            const matches = profilePic.match(/^data:(.+);base64,/);
-            if (matches && matches[1]) {
-                const mimeType = matches[1];
-                const base64Data = profilePic.replace(/^data:.+;base64,/, '');
-                const buffer = Buffer.from(base64Data, "base64");
-
-                // Update field
-                user.profilePic = {data: buffer, contentType: mimeType}
-            } else {
-                return res.status(400).json({
-                    message: "Invalid image format"
-                })
-            }
-        }
 
         // Save updated user profile
         const updatedUser = await user.save();
