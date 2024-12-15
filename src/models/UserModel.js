@@ -30,21 +30,23 @@ const UserSchema = mongoose.Schema({
         enum: ["Private", "Travelling", "Local"]
     },
     profilePic: {
-        data: Buffer,
-        contentType: String
+        type: String,
     },
     travelPreferencesAndGoals: {
         type: [String]
     },
     socialMediaLink: {
         type: String,
-        match: /^(?:https?:\/\/)?(?:www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)+[^\s]*$/
+        match: /^https?:\/\/(?:www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)+[^\s]*$/
     },
     isAdmin: { 
         type: Boolean,
         default: false
     }
 });
+
+// Add compound index
+UserSchema.index({location: 1, status: 1});
 
 const UserModel = mongoose.model("User", UserSchema)
 

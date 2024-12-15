@@ -11,7 +11,7 @@ const generateToken = (id, isAdmin) => {
     });
   };
 
-// @desc    Get all users (Admin only) 
+// @desc    Get all users (Admin only)
 // @route   GET /user
 const getAllUsers = asyncHandler(async (req, res) => {
     try {
@@ -30,7 +30,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
 });
 
 // @desc    Register new user
-// @route   POST /api/users
+// @route   POST /user
 const registerUser = asyncHandler(async (req, res) => {
   const {name, email, password, status, location, travelPreferencesAndGoals, socialMediaLink, isAdmin} = req.body;
 
@@ -84,7 +84,7 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 
 // @desc    User Login
-// @route   POST /api/users/login
+// @route   POST /user/login
 const loginUser = asyncHandler(async (req, res) => {
   const {email, password} = req.body;
 
@@ -123,7 +123,7 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 // @desc    Get currently logged-in user data 
-// @route   GET /api/users/me
+// @route   GET /user/me
 const recieveLoggedInUser = asyncHandler(async (req, res) => {
     const { _id, name, email } = await UserModel.findById(req.user.id);
     res.status(200).json({
@@ -134,7 +134,7 @@ const recieveLoggedInUser = asyncHandler(async (req, res) => {
 });
 
 // @desc    Admin Login
-// @route   POST /api/admin/adminlogin
+// @route   POST /user/adminlogin
 const adminLogin = asyncHandler (async (req, res) => {
     const {email, password} = req.body 
 
@@ -172,8 +172,8 @@ const adminLogin = asyncHandler (async (req, res) => {
 }); 
 
 // @desc    Password reset email 
-// @route   api/users/forgetPassword
-// @route   api/users/resetPassword
+// @route   /user/forgetPassword
+// @route   /user/resetPassword
 const passwordResetEmail = (token) => `
     <h1>Reset Your Password</h1>
     <p>You requested a password reset. Please use the following token to reset your password:</p>
@@ -231,17 +231,16 @@ const forgetPassword = asyncHandler (async (req, res) => {
 }); 
 
 const resetPassword = asyncHandler(async (req, res) => {
-    const { newPassword } = req.body;
-    const { token } = req.params;
+    const { newPassword, resetToken } = req.body;
 
     // Validate new password
-    if (!newPassword || typeof newPassword !== 'string') {
+    if ( !resetToken || !newPassword || typeof newPassword !== 'string') {
         return res.status(400).json({ message: "Invalid password format."});
     }
 
     try {
         // Verify the token
-        const decodedToken = jwt.verify(token, process.env.JWT_RESET_PASSWORD_SECRET);
+        const decodedToken = jwt.verify(resetToken, process.env.JWT_RESET_PASSWORD_SECRET);
 
         if (!decodedToken || !decodedToken.userId) {
             return res.status(401).json({ message: "Invalid or expired token." });

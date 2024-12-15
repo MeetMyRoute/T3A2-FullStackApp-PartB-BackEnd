@@ -8,20 +8,23 @@ app.use(cors());
 app.use(express.json());
 
 // Test basic route
-app.get("/", (request, response) => {
-    response.json({
+app.get("/", (req, res) => {
+    res.json({
         message: "MeetMyRoute"
     });
 });
 
 const ProfileRouter = require("./routes/ProfileRoute");
-app.use("/profile", ProfileRouter);
+app.use("//profile", ProfileRouter);
 
 const ItineraryRouter = require("./routes/ItineraryRoute");
 app.use("/itinerary", ItineraryRouter);
 
-const UserRouter = require('./routes/userRoute'); 
-app.use('/api/users', UserRouter); 
+const UserRouter = require('./routes/UserRoute'); 
+app.use('/user', UserRouter);
+
+const SearchRouter = require("./routes/SearchRoute");
+app.use("/search", SearchRouter);
 
 module.exports = {
     app

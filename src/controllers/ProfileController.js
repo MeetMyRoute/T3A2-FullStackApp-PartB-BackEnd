@@ -1,49 +1,87 @@
-const {request, response } = require("express");
+const { req, res } = require("express");
 const { UserModel } = require("../models/UserModel");
+const { ItineraryModel } = require("../models/ItineraryModel");
 
 // Get a user profile
-const getProfile = async (request, response) => {
+const getProfile = async (req, res) => {
     try {
         // Get the user ID from the URL parameters
-        const {id} = request.params;
+        const {id} = req.params;
 
         // Find user profile that belong to the user ID
         const user = await UserModel.findById(id);
 
-        // Check if user ID exists
+        // Check if the user ID exists
+        // If it does not, return error
+        // Check if the user ID exists
+        // If it does not, return error
         if (!user) {
-            return response.status(404).json({
+            return res.status(404).json({
                 message: "User not found"
             })
         }
 
+        // Check if status is set to Private
+        // If it is, return error
+        if (user.status == "Private") {
+            return res.status(403).json({
+                message: "User profile is private"
+            })
+        }
+
+        // Find itineraries belonging to the user
+        const itineraries = await ItineraryModel.find({userId: id}).select("destination startDate endDate");
+
+        // Format itineraries
+        const formattedItineraries = itineraries.map(itinerary => ({
+            destination: itinerary.destination,
+            startDate: itinerary.startDate,
+            endDate: itinerary.endDate
+        }));
+
+        // Check if status is set to Private
+        // If it is, return error
+        if (user.status == "Private") {
+            return response.status(403).json({
+                message: "User profile is private"
+            })
+        }
+
         // Respond with the found user profile
-        response.status(200).json({
+        res.status(200).json({
             message: "User profile retrieved successfully",
-            data: user
+            data: {
+                name: user.name,
+                location: user.location, 
+                status: user.status,
+                profilePic: user.profilePic,
+                travelPreferencesAndGoals: user.travelPreferencesAndGoals,
+                socialMediaLink: user.socialMediaLink,
+                itineraries: formattedItineraries
+            }
         });
     } catch (error) {
-        response.status(500).json({
-            message: "Error retrieving user profile",
+        res.status(500).json({
+            message: "Error retrieving user profile:",
             error 
         });
     }
 }
 
 // Update details of user profile
-const updateProfile = async (request, response) => {
+const updateProfile = async (req, res) => {
     try {
         // Get the user ID from the URL parameters
-        const {id} = request.params;
+        const {id} = req.params;
         // Get data to update from the request body
-        const {name, location, status, travelPreferencesAndGoals, socialMediaLink} = request.body;
+        const {name, location, status, profilePic, travelPreferencesAndGoals, socialMediaLink} = req.body;
 
         // Get user ID from JWT token
-        const loggedInUserId = request.user.id;
+        const loggedInUserId = req.user.id;
 
         // Check if logged in user ID matches user ID from the URL parameters
         if (loggedInUserId !== id) {
-            return response.status(403).json({
+            return res.status(403).json({
                 message: "User not authorised"
             });
         }
@@ -53,7 +91,7 @@ const updateProfile = async (request, response) => {
 
         // Check if user ID exists
         if (!user) {
-            return response.status(404).json({
+            return res.status(404).json({
                 message: "User not found"
             })
         }
@@ -62,6 +100,7 @@ const updateProfile = async (request, response) => {
         user.name = name || user.name;
         user.location = location || user.location;
         user.status = status || user.status;
+        user.profilePic = profilePic || user.profilePic;
         user.travelPreferencesAndGoals = travelPreferencesAndGoals || user.travelPreferencesAndGoals;
         user.socialMediaLink = socialMediaLink || user.socialMediaLink;
 
@@ -69,13 +108,13 @@ const updateProfile = async (request, response) => {
         const updatedUser = await user.save();
 
         // Respond with the updated user profile
-        return response.status(200).json({
+        return res.status(200).json({
             message: "User profile updated successfully",
             data: updatedUser
         })
     } catch (error) {
-        response.status(500).json({
-            message: "Error updated user profile",
+        res.status(500).json({
+            message: "Error updated user profile:",
             error 
         });
     }
