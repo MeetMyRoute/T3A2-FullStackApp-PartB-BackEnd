@@ -13,6 +13,8 @@ const getProfile = async (req, res) => {
 
         // Check if the user ID exists
         // If it does not, return error
+        // Check if the user ID exists
+        // If it does not, return error
         if (!user) {
             return res.status(404).json({
                 message: "User not found"
@@ -27,16 +29,6 @@ const getProfile = async (req, res) => {
             })
         }
 
-        // Check if a profile pic exists
-        // If it does, convert it to Base64
-        let profilePicUrl = null;
-        if (user.profilePic) {
-            // Convert the Buffer binary data to a Base64 string
-            const base64Image = user.profilePic.toString("base64");
-            // Create a data URL format
-            profilePicUrl = `data:${user.profilePic.contentType};base64,${base64Image}`;
-        }
-
         // Find itineraries belonging to the user
         const itineraries = await ItineraryModel.find({userId: id}).select("destination startDate endDate");
 
@@ -47,6 +39,14 @@ const getProfile = async (req, res) => {
             endDate: itinerary.endDate
         }));
 
+        // Check if status is set to Private
+        // If it is, return error
+        if (user.status == "Private") {
+            return response.status(403).json({
+                message: "User profile is private"
+            })
+        }
+
         // Respond with the found user profile
         res.status(200).json({
             message: "User profile retrieved successfully",
@@ -54,7 +54,7 @@ const getProfile = async (req, res) => {
                 name: user.name,
                 location: user.location, 
                 status: user.status,
-                profilePic: profilePicUrl,
+                profilePic: user.profilePic,
                 travelPreferencesAndGoals: user.travelPreferencesAndGoals,
                 socialMediaLink: user.socialMediaLink,
                 itineraries: formattedItineraries
@@ -74,7 +74,7 @@ const updateProfile = async (req, res) => {
         // Get the user ID from the URL parameters
         const {id} = req.params;
         // Get data to update from the request body
-        const {name, location, status, travelPreferencesAndGoals, socialMediaLink} = req.body;
+        const {name, location, status, profilePic, travelPreferencesAndGoals, socialMediaLink} = req.body;
 
         // Get user ID from JWT token
         const loggedInUserId = req.user.id;
@@ -100,26 +100,9 @@ const updateProfile = async (req, res) => {
         user.name = name || user.name;
         user.location = location || user.location;
         user.status = status || user.status;
+        user.profilePic = profilePic || user.profilePic;
         user.travelPreferencesAndGoals = travelPreferencesAndGoals || user.travelPreferencesAndGoals;
         user.socialMediaLink = socialMediaLink || user.socialMediaLink;
-
-        // If new data is provided for profilePic, convert it into a Buffer object
-        if (profilePic) {
-            // Extract MIME type
-            const matches = profilePic.match(/^data:(.+);base64,/);
-            if (matches && matches[1]) {
-                const mimeType = matches[1];
-                const base64Data = profilePic.replace(/^data:.+;base64,/, '');
-                const buffer = Buffer.from(base64Data, "base64");
-
-                // Update field
-                user.profilePic = {data: buffer, contentType: mimeType}
-            } else {
-                return res.status(400).json({
-                    message: "Invalid image format"
-                })
-            }
-        }
 
         // Save updated user profile
         const updatedUser = await user.save();
