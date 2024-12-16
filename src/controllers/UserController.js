@@ -29,6 +29,21 @@ const getAllUsers = asyncHandler(async (req, res) => {
     }
 });
 
+// @desc    Get user by ID
+// @route   GET /user/:id
+const getUserById = asyncHandler(async (req, res) => {
+    try {
+        const user = await UserModel.findById(req.params.id).select("-password");
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.status(200).json(user);
+    } catch (error) {
+        console.error("Error fetching user:", error);
+        res.status(500).json({ message: "An error occurred while fetching the user." });
+    }
+});
+
 // @desc    Register new user
 // @route   POST /user
 const registerUser = asyncHandler(async (req, res) => {
@@ -40,10 +55,18 @@ const registerUser = asyncHandler(async (req, res) => {
           return res.status(400).json({ message: "Please fill in all fields" });
       }
 
+      // Validate password
+      const passwordRegex = /^(?=.*[A-Z]).{11,}$/;
+      if (!passwordRegex.test(password)) {
+          return res.status(400).json({
+              message: "Password must be at least 11 characters long and contain at least one uppercase letter."
+          });
+      }
+
       // Check if user already exists
       const userExists = await UserModel.findOne({ email });
       if (userExists) {
-          return res.status(400).json({ message: "User already exists" });
+          return res.status(400).json({ message: "User already exists with this email." });
       }
 
       // Create hashed password
@@ -278,7 +301,8 @@ module.exports = {
     getAllUsers, 
     registerUser,
     loginUser,
-    recieveLoggedInUser, 
+    getUserById,
+    recieveLoggedInUser,  
     adminLogin, 
     forgetPassword, 
     resetPassword
