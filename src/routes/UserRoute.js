@@ -6,7 +6,8 @@ const {
   getAllUsers, 
   registerUser,
   loginUser,
-  recieveLoggedInUser, 
+  getUserById,
+  recieveLoggedInUser,  
   adminLogin, 
   forgetPassword, 
   resetPassword,
@@ -20,6 +21,8 @@ router.post("/login", loginUser);
 router.post("/adminLogin",adminLogin);
 // Route to get all users (requires admin authentication)
 router.get("/", auth, getAllUsers);
+// Route to get user by ID
+router.get("/:id", getUserById)
 // Route to fetch the currently logged-in user's information
 router.get("/me", auth, recieveLoggedInUser);
 // Route to handle forgotten password requests
