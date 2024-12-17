@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const asyncHandler = require("express-async-handler"); 
 const jwt = require("jsonwebtoken");
 const nodemailer = require ("nodemailer"); 
+const upload = require("../middleware/uploadConfig");
 const { UserModel } = require('../models/UserModel');
 
 // Generate JWT Token
@@ -21,26 +22,11 @@ const getAllUsers = asyncHandler(async (req, res) => {
         }
 
         // Fetch all users from the database
-        const users = await UserModel.find({}).select("-password"); 
+        const users = await UserModel.find({}).select("-password");
         res.status(200).json(users);
     } catch (error) {
         console.error("Error fetching users:", error);
         res.status(500).json({ message: "An error occurred while fetching users." });
-    }
-});
-
-// @desc    Get user by ID
-// @route   GET /user/:id
-const getUserById = asyncHandler(async (req, res) => {
-    try {
-        const user = await UserModel.findById(req.params.id).select("-password");
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-        res.status(200).json(user);
-    } catch (error) {
-        console.error("Error fetching user:", error);
-        res.status(500).json({ message: "An error occurred while fetching the user." });
     }
 });
 
@@ -51,16 +37,8 @@ const registerUser = asyncHandler(async (req, res) => {
 
   try {
       // Check fields have been filled in
-      if (!email || !password || !status || !location || !travelPreferencesAndGoals || !socialMediaLink) {
+      if (!name || !email || !password || !status || !location || !travelPreferencesAndGoals || !socialMediaLink) {
           return res.status(400).json({ message: "Please fill in all fields" });
-      }
-
-      // Validate password
-      const passwordRegex = /^(?=.*[A-Z]).{11,}$/;
-      if (!passwordRegex.test(password)) {
-          return res.status(400).json({
-              message: "Password must be at least 11 characters long and contain at least one uppercase letter."
-          });
       }
 
       // Check if user already exists
@@ -72,6 +50,12 @@ const registerUser = asyncHandler(async (req, res) => {
       // Create hashed password
       const salt = await bcrypt.genSalt(10); 
       const hashedPassword = await bcrypt.hash(password, salt);
+      
+      // Handle file upload
+      let profilePicturePath = null;
+      if (req.file) {
+         profilePicturePath = req.file.path;
+       }
 
       // Create a new user
       const newUser = await UserModel.create({
@@ -82,6 +66,7 @@ const registerUser = asyncHandler(async (req, res) => {
           travelPreferencesAndGoals,
           status,
           socialMediaLink,
+          profilePicture: profilePicturePath, 
           isAdmin: isAdmin || false 
       });
 
@@ -95,6 +80,7 @@ const registerUser = asyncHandler(async (req, res) => {
               location: newUser.location,
               travelPreferencesAndGoals: newUser.travelPreferencesAndGoals, 
               socialMediaLink: newUser.socialMediaLink,
+              profilePicture: profilePicturePath, 
               token: generateToken(newUser._id),
           });
       } else {
@@ -201,7 +187,7 @@ const passwordResetEmail = (token) => `
     <h1>Reset Your Password</h1>
     <p>You requested a password reset. Please use the following token to reset your password:</p>
     <p><strong>Your reset token:</strong> <span style="font-size: 18px;">${token}</span></p>
-    <p>The token above will expire in 10 minutes. If you didn't request this password reset, please ignore this email.</p>
+    <p>The token above will expire in one hour. If you didn't request this password reset, please ignore this email.</p>
 `;
 
 const forgetPassword = asyncHandler (async (req, res) => {
@@ -220,7 +206,7 @@ const forgetPassword = asyncHandler (async (req, res) => {
         }
 
         // Generate a unique JWT token for password reset
-        const token = jwt.sign({userId: user._id}, process.env.JWT_RESET_PASSWORD_SECRET, {expiresIn: '10m'}); 
+        const token = jwt.sign({userId: user._id}, process.env.JWT_RESET_PASSWORD_SECRET, {expiresIn: '1h'}); 
 
         // Configure the email transporter 
         const emailSender = nodemailer.createTransport ({
@@ -301,7 +287,6 @@ module.exports = {
     getAllUsers, 
     registerUser,
     loginUser,
-    getUserById,
     recieveLoggedInUser,  
     adminLogin, 
     forgetPassword, 
