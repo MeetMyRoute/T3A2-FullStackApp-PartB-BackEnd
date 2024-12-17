@@ -13,7 +13,7 @@ router.get("/", auth, getItineraries);
 router.get("/simplified", auth, getSimplifiedItineraries);
 
 // Route for updating details of a specific itinerary
-router.put("/:id", auth, updateItinerary);
+router.patch("/:id", auth, updateItinerary);
 
 // Route for deleting an itinerary from the database
 router.delete("/:id", auth, deleteItinerary);

@@ -1,7 +1,5 @@
-const { res, req } = require("express");
 const validateDates = require("../middleware/itinerary");
 const { ItineraryModel } = require("../models/ItineraryModel");
-const { UserModel } = require("../models/UserModel");
 
 // Create a new itinerary to the database
 const createItinerary = async(req, res) => {
@@ -99,86 +97,6 @@ const getSimplifiedItineraries = async(req, res) => {
     }
 }
 
-// Get shared (simplified) itineraries and local users excluding the user's by filters: destination, startDate and endDate
-const getItinerariesAndUsersByFilters = async(req, res) => {
-    try {
-        // Extract filters from query params
-        const {destination, startDate, endDate} = req.query;
-        const loggedInUserId = req.user.id;
-
-        if (!destination || !startDate || !endDate) {
-            return res.status(400).json({
-                message: "Destination, start date, and end date are required"
-            })
-        }
-
-        // Query for itineraries excluding the user's and matching the filters
-        const itineraries = await ItineraryModel.find({
-            userId: {$ne: loggedInUserId},
-            destination,
-            startDate: {$gte: startDate},
-            endDate: {$lte: endDate}
-        }).populate("userId", "name status profilePic");
-
-        // Query for local users at the destination
-        const localUsers = await UserModel.find({
-            _id: {$ne: loggedInUserId},
-            location: destination,
-            status: "Local"
-        }).select("name location status profilePic");
-        
-        // Check if any itineraries and users match the filters
-        if (!itineraries.length && !localUsers.length) {
-            return res.status(404).json({
-                message: "No matching itineraries and locals found"
-            });
-        }
-
-        // Format the results
-        const results = [
-            ...itineraries.map((itinerary) => {
-                let profilePicUrl = null;
-                if (itinerary.userId.profilePic?.data) {
-                    const base64Image = itinerary.userId.profilePic.data.toString("base64");
-                    profilePicUrl = `data:${itinerary.userId.profilePic.contentType};base64,${base64Image}`;
-                }
-                return {
-                    user: itinerary.userId.name,
-                    status: itinerary.userId.status,
-                    profilePic: profilePicUrl,
-                    destination: itinerary.destination,
-                    startDate: itinerary.startDate,
-                    endDate: itinerary.endDate
-                }
-            }),
-            ...localUsers.map((user) => {
-                let profilePicUrl = null;
-                if (user.profilePic?.data) {
-                    const base64Image = user.profilePic.data.toString("base64");
-                    profilePicUrl = `data${user.profilePic.contentType};base64,${base64Image}`;
-                }
-                return {
-                    user: user.name,
-                    location: user.location,
-                    status: user.status,
-                    profilePic: profilePicUrl
-                }
-            })
-        ]
-
-        // Respond with the filtered itineraries
-        return res.status(200).json({
-            message: "Filtered shared itineraries/local users retrieved successfully",
-            data: results
-        });
-    } catch(error) {
-        return res.status(500).json({
-            message: "Error retrieving filtered shared itineraries/local users:",
-            error
-        });
-    }
-}
-
 // Update details of a specific itinerary
 const updateItinerary = async(req, res) => {
     try {
@@ -261,7 +179,6 @@ module.exports = {
     createItinerary,
     getItineraries,
     getSimplifiedItineraries,
-    getItinerariesAndUsersByFilters,
     updateItinerary,
     deleteItinerary
 }

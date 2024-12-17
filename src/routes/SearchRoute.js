@@ -1,5 +1,5 @@
 const express = require("express");
-const { getItinerariesAndUsersByFilters } = require("../controllers/ItineraryController");
+const { getItinerariesAndUsersByFilters } = require("../controllers/SearchController");
 const { auth } = require("../middleware/auth");
 const router = express.Router();
 
