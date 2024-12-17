@@ -11,6 +11,7 @@ const {
   adminLogin, 
   forgetPassword, 
   resetPassword,
+  deleteUser
 } = require("../controllers/UserController");
 
 // Route to register a new user
@@ -29,5 +30,7 @@ router.get("/me", auth, recieveLoggedInUser);
 router.post("/forgetPassword", forgetPassword);
 // Route to handle password reset using a valid token
 router.patch("/reset-password", resetPassword);
+// Route to delete user account
+router.delete("/delete", auth, deleteUser);
 
 module.exports = router;
