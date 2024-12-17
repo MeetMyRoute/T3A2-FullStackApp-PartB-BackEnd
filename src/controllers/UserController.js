@@ -304,7 +304,7 @@ const deleteUser = async (req, res) => {
         // Get user ID from JWT token
         const {id} = req.user;
 
-        // Find user profile that belong to the user ID
+        // Find user that belong to the user ID
         const user = await UserModel.findOneAndDelete({_id: id});
 
         // Check if user ID exists
