@@ -52,9 +52,9 @@ const registerUser = asyncHandler(async (req, res) => {
       const hashedPassword = await bcrypt.hash(password, salt);
       
       // Handle file upload
-      let profilePicturePath = null;
+      let profilePicPath = null;
       if (req.file) {
-         profilePicturePath = req.file.path;
+         profilePicPath = req.file.path;
        }
 
       // Create a new user
@@ -66,7 +66,7 @@ const registerUser = asyncHandler(async (req, res) => {
           travelPreferencesAndGoals,
           status,
           socialMediaLink,
-          profilePicture: profilePicturePath, 
+          profilePic: profilePicPath, 
           isAdmin: isAdmin || false 
       });
 
@@ -80,7 +80,7 @@ const registerUser = asyncHandler(async (req, res) => {
               location: newUser.location,
               travelPreferencesAndGoals: newUser.travelPreferencesAndGoals, 
               socialMediaLink: newUser.socialMediaLink,
-              profilePicture: profilePicturePath, 
+              profilePic: profilePicPath, 
               token: generateToken(newUser._id),
           });
       } else {
