@@ -3,8 +3,18 @@ const cors = require("cors");
 
 const app = express();
 
-// Update when deployed
-app.use(cors());
+// CORS configuration
+const corsOptions = {
+
+    // Allow all origins
+    origin: "*",
+
+    // Allowed HTTP Methods
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+}
+
+// Middleware
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Test basic route
@@ -14,6 +24,7 @@ app.get("/", (req, res) => {
     });
 });
 
+// Routes
 const ProfileRouter = require("./routes/ProfileRoute");
 app.use("/profile", ProfileRouter);
 
@@ -25,6 +36,9 @@ app.use('/user', UserRouter);
 
 const SearchRouter = require("./routes/SearchRoute");
 app.use("/search", SearchRouter);
+
+const MessageRouter = require("./routes/MessageRoute");
+app.use("/connects");
 
 module.exports = {
     app
