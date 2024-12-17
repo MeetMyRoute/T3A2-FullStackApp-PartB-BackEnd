@@ -1,4 +1,3 @@
-const { res, req } = require("express");
 const validateDates = require("../middleware/itinerary");
 const { ItineraryModel } = require("../models/ItineraryModel");
 const { UserModel } = require("../models/UserModel");
@@ -15,6 +14,8 @@ const getItinerariesAndUsersByFilters = async(req, res) => {
                 message: "Destination, start date, and end date are required"
             })
         }
+
+        validateDates(startDate, endDate);
 
         // Query for itineraries excluding the user's and matching the filters
         const itineraries = await ItineraryModel.find({

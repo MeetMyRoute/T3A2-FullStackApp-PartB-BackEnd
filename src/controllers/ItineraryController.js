@@ -1,4 +1,3 @@
-const { res, req } = require("express");
 const validateDates = require("../middleware/itinerary");
 const { ItineraryModel } = require("../models/ItineraryModel");
 
