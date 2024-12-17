@@ -1,4 +1,3 @@
-const { req, res } = require("express");
 const { UserModel } = require("../models/UserModel");
 const { ItineraryModel } = require("../models/ItineraryModel");
 
