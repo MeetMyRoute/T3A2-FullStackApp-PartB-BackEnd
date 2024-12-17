@@ -8,9 +8,7 @@ const corsOptions = {
 
     // Allow all origins
     origin: "*",
-
-    // Allowed HTTP Methods
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+    optionsSuccessStatus: 200
 }
 
 // Middleware
