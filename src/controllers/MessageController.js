@@ -43,21 +43,21 @@ const sendConnectMessage = async(req, res) => {
     }
 }
 
-// Get all connect messages
-const getConnectMessages = async(req, res) => {
+// Get other user's information that have sent a message or the user has received a message from
+const getUserConnections = async(req, res) => {
     try {
         // Extract from auth middleware
-        const userId = req.user.id;
+        const loggedInUserId = req.user.id;
 
-        // Find messages where the user is the sender or recipient
-        const messages = await MessageModel.find({
+        // Fetch messages where the user is the sender or recipient
+        const connections = await MessageModel.find({
             $or: [
 
                 // Messages sent by the user
-                {senderId: userId},
+                {senderId: loggedInUserId},
 
                 // Messages received by the user
-                {recipientId: userId}
+                {recipientId: loggedInUserId}
             ]
         })
             .populate("senderId", "name profilePic socialMediaLink")
@@ -66,47 +66,42 @@ const getConnectMessages = async(req, res) => {
             // Sort by most recent message
             .sort({timestamp: -1});
 
-            // Check if messages exist
-            if (!messages.length) {
-                return res.status(404).json({
-                    message: "No connect messages found"
-                });
-            }
+            // Process and format unique connections
+            const connectionSet = new Set();
+            const formattedConnections = [];
+            
+            connections.forEach((msg) => {
+                
+                // Extract user details based on message direction
+                const otherUser = msg.senderId._id.toString() === loggedInUserId
+                    ? msg.recipientId
+                    : msg.senderId;
 
-            // Format the results
-            const formattedMessages = messages.map((msg) => {
-                return {
-                    id: msg._id,
-                    sender: {
-                        id: msg.senderId._id,
-                        name: msg.senderId.name,
-                        profilePic: msg.senderId.profilePic || null,
-                        socialMediaLink: msg.senderId.socialMediaLink
-                    },
-                    recipient: {
-                        id: msg.recipientId._id,
-                        name: msg.recipientId.name,
-                        profilePic: msg.recipientId.profilePic || null,
-                        socialMediaLink: msg.recipientId.socialMediaLink
-                    },
-                    timestamp: msg.timestamp
+                if (!connectionSet.has(otherUser._id.toString())) {
+                    connectionSet.add(otherUser._id.toString());
+                    formattedConnections.push({
+                        userId: otherUser._id,
+                        name: otherUser.name,
+                        profilePic: otherUser.profilePic,
+                        socialMediaLink: otherUser.socialMediaLink
+                    });
                 }
             });
-
+            
             // Send response
             return res.status(200).json({
-                message: "Connect messages retrieved successfully",
-                data: formattedMessages
+                message: "Connections retrieved successfully",
+                data: formattedConnections
             });
     } catch(error) {
         return res.status(500).json({
-            message: "Error retrieving connect messages:",
+            message: "Error retrieving connections:",
             error
-        })
+        });
     }
 }
 
 module.exports = {
     sendConnectMessage,
-    getConnectMessages
+    getUserConnections
 }
