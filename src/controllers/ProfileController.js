@@ -13,8 +13,6 @@ const getProfile = async (req, res) => {
 
         // Check if the user ID exists
         // If it does not, return error
-        // Check if the user ID exists
-        // If it does not, return error
         if (!user) {
             return res.status(404).json({
                 message: "User not found"
@@ -38,14 +36,6 @@ const getProfile = async (req, res) => {
             startDate: itinerary.startDate,
             endDate: itinerary.endDate
         }));
-
-        // Check if status is set to Private
-        // If it is, return error
-        if (user.status == "Private") {
-            return response.status(403).json({
-                message: "User profile is private"
-            })
-        }
 
         // Respond with the found user profile
         res.status(200).json({
