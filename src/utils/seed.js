@@ -71,11 +71,11 @@ const seedItineraries = async(users) => {
     const itineraries = [
         {
             userId: users[0]._id,
-            destination: "Melbourne",
+            destination: "London",
             startDate: "2025-01-15",
             endDate: "2025-01-19",
-            accommodation: "W Melbourne",
-            activities: ["Royal Botanic Gardens Victoria", "National Gallery of Victoria"]
+            accommodation: "Hilton London Hyde Park",
+            activities: ["The British Museum", "Tower of London"]
         },
         {
            userId: users[0]._id,

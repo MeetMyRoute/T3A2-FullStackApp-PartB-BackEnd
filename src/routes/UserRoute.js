@@ -11,12 +11,13 @@ const {
   adminLogin, 
   forgetPassword, 
   resetPassword,
+  deleteUser
 } = require("../controllers/UserController");
 
 // Route to register a new user
 // router.post("/", registerUser);
 // Route to register a new user with profile picture upload
-router.post("/", upload.single("profilePicture"), registerUser);
+router.post("/", upload.single("profilePic"), registerUser);
 // Route to log in an existing user and generate a token
 router.post("/login", loginUser);
 // Route to log in admin user and generate a token 
@@ -29,5 +30,7 @@ router.get("/me", auth, recieveLoggedInUser);
 router.post("/forgetPassword", forgetPassword);
 // Route to handle password reset using a valid token
 router.patch("/reset-password", resetPassword);
+// Route to delete user account
+router.delete("/delete", auth, deleteUser);
 
 module.exports = router;

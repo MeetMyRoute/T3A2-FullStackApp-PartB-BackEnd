@@ -1,4 +1,3 @@
-const { req, res } = require("express");
 const { UserModel } = require("../models/UserModel");
 const { ItineraryModel } = require("../models/ItineraryModel");
 
@@ -11,8 +10,6 @@ const getProfile = async (req, res) => {
         // Find user profile that belong to the user ID
         const user = await UserModel.findById(id);
 
-        // Check if the user ID exists
-        // If it does not, return error
         // Check if the user ID exists
         // If it does not, return error
         if (!user) {
@@ -38,14 +35,6 @@ const getProfile = async (req, res) => {
             startDate: itinerary.startDate,
             endDate: itinerary.endDate
         }));
-
-        // Check if status is set to Private
-        // If it is, return error
-        if (user.status == "Private") {
-            return response.status(403).json({
-                message: "User profile is private"
-            })
-        }
 
         // Respond with the found user profile
         res.status(200).json({

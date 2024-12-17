@@ -52,9 +52,9 @@ const registerUser = asyncHandler(async (req, res) => {
       const hashedPassword = await bcrypt.hash(password, salt);
       
       // Handle file upload
-      let profilePicturePath = null;
+      let profilePicPath = null;
       if (req.file) {
-         profilePicturePath = req.file.path;
+         profilePicPath = req.file.path;
        }
 
       // Create a new user
@@ -66,7 +66,7 @@ const registerUser = asyncHandler(async (req, res) => {
           travelPreferencesAndGoals,
           status,
           socialMediaLink,
-          profilePicture: profilePicturePath, 
+          profilePic: profilePicPath, 
           isAdmin: isAdmin || false 
       });
 
@@ -80,7 +80,7 @@ const registerUser = asyncHandler(async (req, res) => {
               location: newUser.location,
               travelPreferencesAndGoals: newUser.travelPreferencesAndGoals, 
               socialMediaLink: newUser.socialMediaLink,
-              profilePicture: profilePicturePath, 
+              profilePic: profilePicPath, 
               token: generateToken(newUser._id),
           });
       } else {
@@ -283,6 +283,36 @@ const resetPassword = asyncHandler(async (req, res) => {
     }
 });
 
+// @desc    Delete user account
+// @route   /user/delete
+const deleteUser = async (req, res) => {
+    try {
+        // Get user ID from JWT token
+        const {id} = req.user;
+
+        // Find user that belong to the user ID
+        const user = await UserModel.findOneAndDelete({_id: id});
+
+        // Check if user ID exists
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found"
+            })
+        }
+
+        // Respond with a success message
+        return res.status(200).json({
+            message: "User account deleted successfully",
+        })
+    // Respond with an error message
+    } catch (error) {
+        res.status(500).json({
+            message: "Error deleting user account:",
+            error 
+        });
+    }
+}
+
 module.exports = {
     getAllUsers, 
     registerUser,
@@ -290,5 +320,6 @@ module.exports = {
     recieveLoggedInUser,  
     adminLogin, 
     forgetPassword, 
-    resetPassword
+    resetPassword,
+    deleteUser
 };
