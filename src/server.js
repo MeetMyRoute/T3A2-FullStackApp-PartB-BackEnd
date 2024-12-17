@@ -37,6 +37,9 @@ app.use('/user', UserRouter);
 const SearchRouter = require("./routes/SearchRoute");
 app.use("/search", SearchRouter);
 
+const MessageRouter = require("./routes/MessageRoute");
+app.use("/connect");
+
 module.exports = {
     app
 }
