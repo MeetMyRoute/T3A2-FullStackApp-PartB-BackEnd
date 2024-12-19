@@ -4,7 +4,7 @@ const { UserModel } = require("../models/UserModel");
 const { MessageModel } = require("../models/MessageModel");
 
 // Get shared (simplified) itineraries and local users excluding the user's by filters: destination, startDate and endDate
-const getItinerariesAndUsersByFilters = async(req, res) => {
+const getItinerariesAndUsers = async(req, res) => {
     try {
         // Extract filters from query params
         const {destination, startDate, endDate} = req.query;
@@ -97,5 +97,5 @@ const getItinerariesAndUsersByFilters = async(req, res) => {
 }
 
 module.exports = {
-    getItinerariesAndUsersByFilters
+    getItinerariesAndUsers
 }

@@ -1,7 +1,7 @@
 const { MessageModel } = require("../models/MessageModel");
 
 // Send a message and store in the database
-const sendConnectMessage = async(req, res) => {
+const sendMessage = async(req, res) => {
     try {
         // Extract from request body
         const {recipientId, message} = req.body;
@@ -44,19 +44,14 @@ const sendConnectMessage = async(req, res) => {
 }
 
 // Get other user's information that have sent a message or the user has received a message from
-const getUserConnects = async(req, res) => {
+const getConnects = async(req, res) => {
     try {
-        // Extract from auth middleware
         const loggedInUserId = req.user.id;
 
-        // Fetch messages where the user is the sender or recipient
+        // Fetch messages where the user is either the sender or the recipient
         const connects = await MessageModel.find({
             $or: [
-
-                // Messages sent by the user
                 {senderId: loggedInUserId},
-
-                // Messages received by the user
                 {recipientId: loggedInUserId}
             ]
         })
@@ -66,44 +61,34 @@ const getUserConnects = async(req, res) => {
             // Sort by most recent message
             .sort({timestamp: -1});
 
-            // Process and format unique connections
-            const connectsSet = new Set();
-            const formattedConnects = [];
+        // Process and format unique connects
+        const connectsSet = new Set();
+        const formattedConnects = [];
             
-            for (const msg of connects) {
+        connects.forEach((msg) => {
+
+            // Extract user details based on message direction
+            const otherUser =
+                msg.senderId._id.toString() === loggedInUserId
+                    ? msg.recipientId
+                    : msg.senderId;
                 
-                // Extract user details based on message direction
-                const otherUser =
-                    msg.senderId._id.toString() === loggedInUserId
-                        ? msg.recipientId
-                        : msg.senderId;
-
-                if (!connectsSet.has(otherUser._id.toString())) {
-                    connectsSet.add(otherUser._id.toString());
-                    
-                    // Check if the user has connected with the other user
-                    const hasConnected = await MessageModel.exists({
-                        $or: [
-                            {senderId: loggedInUserId, recipientId: otherUser._id},
-                            {senderId: otherUser._id, recipientId: loggedInUserId}
-                        ]
-                    });
-
-                    formattedConnects.push({
-                        userId: otherUser._id,
-                        name: otherUser.name,
-                        profilePic: otherUser.profilePic,
-                        socialMediaLink: otherUser.socialMediaLink,
-                        hasConnected: !!hasConnected
-                    });
-                }
+            if (!connectsSet.has(otherUser._id.toString())) {
+                connectsSet.add(otherUser._id.toString());
+                formattedConnects.push({
+                    userId: otherUser._id,
+                    name: otherUser.name,
+                    profilePic: otherUser.profilePic,
+                    socialMediaLink: otherUser.socialMediaLink
+                });
             }
+        })
             
-            // Send response
-            return res.status(200).json({
-                message: "Connects retrieved successfully",
-                data: formattedConnects
-            });
+        // Return the unique connects
+        return res.status(200).json({
+            message: "Connects retrieved successfully",
+            data: formattedConnects
+        });
     } catch(error) {
         return res.status(500).json({
             message: "Error retrieving connects:",
@@ -113,6 +98,6 @@ const getUserConnects = async(req, res) => {
 }
 
 module.exports = {
-    sendConnectMessage,
-    getUserConnects
+    sendMessage,
+    getConnects
 }
