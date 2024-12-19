@@ -1,7 +1,7 @@
 const { MessageModel } = require("../models/MessageModel");
 
 // Send a message and store in the database
-const sendConnectMessage = async(req, res) => {
+const sendMessage = async(req, res) => {
     try {
         // Extract from request body
         const {recipientId, message} = req.body;
@@ -44,19 +44,14 @@ const sendConnectMessage = async(req, res) => {
 }
 
 // Get other user's information that have sent a message or the user has received a message from
-const getUserConnections = async(req, res) => {
+const getConnects = async(req, res) => {
     try {
-        // Extract from auth middleware
         const loggedInUserId = req.user.id;
 
-        // Fetch messages where the user is the sender or recipient
-        const connections = await MessageModel.find({
+        // Fetch messages where the user is either the sender or the recipient
+        const connects = await MessageModel.find({
             $or: [
-
-                // Messages sent by the user
                 {senderId: loggedInUserId},
-
-                // Messages received by the user
                 {recipientId: loggedInUserId}
             ]
         })
@@ -66,42 +61,43 @@ const getUserConnections = async(req, res) => {
             // Sort by most recent message
             .sort({timestamp: -1});
 
-            // Process and format unique connections
-            const connectionSet = new Set();
-            const formattedConnections = [];
+        // Process and format unique connects
+        const connectsSet = new Set();
+        const formattedConnects = [];
             
-            connections.forEach((msg) => {
-                
-                // Extract user details based on message direction
-                const otherUser = msg.senderId._id.toString() === loggedInUserId
+        connects.forEach((msg) => {
+
+            // Extract user details based on message direction
+            const otherUser =
+                msg.senderId._id.toString() === loggedInUserId
                     ? msg.recipientId
                     : msg.senderId;
-
-                if (!connectionSet.has(otherUser._id.toString())) {
-                    connectionSet.add(otherUser._id.toString());
-                    formattedConnections.push({
-                        userId: otherUser._id,
-                        name: otherUser.name,
-                        profilePic: otherUser.profilePic,
-                        socialMediaLink: otherUser.socialMediaLink
-                    });
-                }
-            });
+                
+            if (!connectsSet.has(otherUser._id.toString())) {
+                connectsSet.add(otherUser._id.toString());
+                formattedConnects.push({
+                    userId: otherUser._id,
+                    name: otherUser.name,
+                    profilePic: otherUser.profilePic,
+                    socialMediaLink: otherUser.socialMediaLink
+                });
+            }
+        })
             
-            // Send response
-            return res.status(200).json({
-                message: "Connections retrieved successfully",
-                data: formattedConnections
-            });
+        // Return the unique connects
+        return res.status(200).json({
+            message: "Connects retrieved successfully",
+            data: formattedConnects
+        });
     } catch(error) {
         return res.status(500).json({
-            message: "Error retrieving connections:",
+            message: "Error retrieving connects:",
             error
         });
     }
 }
 
 module.exports = {
-    sendConnectMessage,
-    getUserConnections
+    sendMessage,
+    getConnects
 }

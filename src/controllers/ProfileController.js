@@ -1,11 +1,15 @@
 const { UserModel } = require("../models/UserModel");
 const { ItineraryModel } = require("../models/ItineraryModel");
+const { MessageModel } = require("../models/MessageModel");
 
 // Get a user profile
 const getProfile = async (req, res) => {
     try {
         // Get the user ID from the URL parameters
         const {id} = req.params;
+
+        // Get from the request
+        const loggedInUserId = req.user.id;
 
         // Find user profile that belong to the user ID
         const user = await UserModel.findById(id);
@@ -25,6 +29,14 @@ const getProfile = async (req, res) => {
                 message: "User profile is private"
             })
         }
+
+        // Check if the user has connected with the other user
+        const hasConnected = await MessageModel.exists({
+            $or: [
+                {senderId: loggedInUserId, recipientId: id},
+                {senderId: id, recipientId: loggedInUserId}
+            ]
+        });
 
         // Find itineraries belonging to the user
         const itineraries = await ItineraryModel.find({userId: id}).select("destination startDate endDate");
@@ -46,6 +58,7 @@ const getProfile = async (req, res) => {
                 profilePic: user.profilePic,
                 travelPreferencesAndGoals: user.travelPreferencesAndGoals,
                 socialMediaLink: user.socialMediaLink,
+                hasConnected: !!hasConnected,
                 itineraries: formattedItineraries
             }
         });
