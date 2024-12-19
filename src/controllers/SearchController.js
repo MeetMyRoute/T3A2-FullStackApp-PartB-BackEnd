@@ -1,4 +1,4 @@
-const validateDates = require("../middleware/itinerary");
+const validateDates = require("../middleware/validateDates");
 const { ItineraryModel } = require("../models/ItineraryModel");
 const { UserModel } = require("../models/UserModel");
 const { MessageModel } = require("../models/MessageModel");

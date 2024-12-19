@@ -23,8 +23,7 @@ const ItinerarySchema = mongoose.Schema({
     activities: [String]
 });
 
-// Add compound index
-ItinerarySchema.index({userId: 1, destination: 1});
+ItinerarySchema.index({userId: 1, destination: 1, startDate: 1, endDate: 1});
 
 const ItineraryModel = mongoose.model("Itinerary", ItinerarySchema);
 
