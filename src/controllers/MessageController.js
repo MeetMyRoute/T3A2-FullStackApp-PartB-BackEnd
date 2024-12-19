@@ -44,13 +44,13 @@ const sendConnectMessage = async(req, res) => {
 }
 
 // Get other user's information that have sent a message or the user has received a message from
-const getUserConnections = async(req, res) => {
+const getUserConnects = async(req, res) => {
     try {
         // Extract from auth middleware
         const loggedInUserId = req.user.id;
 
         // Fetch messages where the user is the sender or recipient
-        const connections = await MessageModel.find({
+        const connects = await MessageModel.find({
             $or: [
 
                 // Messages sent by the user
@@ -67,35 +67,46 @@ const getUserConnections = async(req, res) => {
             .sort({timestamp: -1});
 
             // Process and format unique connections
-            const connectionSet = new Set();
-            const formattedConnections = [];
+            const connectsSet = new Set();
+            const formattedConnects = [];
             
-            connections.forEach((msg) => {
+            for (const msg of connects) {
                 
                 // Extract user details based on message direction
-                const otherUser = msg.senderId._id.toString() === loggedInUserId
-                    ? msg.recipientId
-                    : msg.senderId;
+                const otherUser =
+                    msg.senderId._id.toString() === loggedInUserId
+                        ? msg.recipientId
+                        : msg.senderId;
 
-                if (!connectionSet.has(otherUser._id.toString())) {
-                    connectionSet.add(otherUser._id.toString());
-                    formattedConnections.push({
+                if (!connectsSet.has(otherUser._id.toString())) {
+                    connectsSet.add(otherUser._id.toString());
+                    
+                    // Check if the user has connected with the other user
+                    const hasConnected = await MessageModel.exists({
+                        $or: [
+                            {senderId: loggedInUserId, recipientId: otherUser._id},
+                            {senderId: otherUser._id, recipientId: loggedInUserId}
+                        ]
+                    });
+
+                    formattedConnects.push({
                         userId: otherUser._id,
                         name: otherUser.name,
                         profilePic: otherUser.profilePic,
-                        socialMediaLink: otherUser.socialMediaLink
+                        socialMediaLink: otherUser.socialMediaLink,
+                        hasConnected: !!hasConnected
                     });
                 }
-            });
+            }
             
             // Send response
             return res.status(200).json({
-                message: "Connections retrieved successfully",
-                data: formattedConnections
+                message: "Connects retrieved successfully",
+                data: formattedConnects
             });
     } catch(error) {
         return res.status(500).json({
-            message: "Error retrieving connections:",
+            message: "Error retrieving connects:",
             error
         });
     }
@@ -103,5 +114,5 @@ const getUserConnections = async(req, res) => {
 
 module.exports = {
     sendConnectMessage,
-    getUserConnections
+    getUserConnects
 }
