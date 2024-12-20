@@ -56,7 +56,7 @@ const registerUser = asyncHandler(async (req, res) => {
           email,
           password: hashedPassword,
           location,
-          travelPreferencesAndGoals,
+          travelPreferencesAndGoals, 
           status,
           profilePic,
           socialMediaLink,
@@ -66,7 +66,7 @@ const registerUser = asyncHandler(async (req, res) => {
       // Check if user creation was successful
       if (newUser) {
           return res.status(201).json({
-              _id: newUser.id,
+              _id: newUser._id,
               name: newUser.name,
               email: newUser.email,
               status: newUser.status,
@@ -78,6 +78,7 @@ const registerUser = asyncHandler(async (req, res) => {
           });
       } else {
           return res.status(400).json({ message: "Invalid user details" });
+
       }
   } catch (error) {
       console.error("Error during user registration:", error);
@@ -92,7 +93,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
   // Check if required fields are present
   if (!email || !password) {
-      return res.status(400).json({ message: "Please add all fields" });
+      return res.status(400).json({ message: "Please provide both email and password." });
   }
 
   try {
@@ -100,20 +101,20 @@ const loginUser = asyncHandler(async (req, res) => {
       const user = await UserModel.findOne({ email: email});
 
       if (!user) {
-        return res.status(404).json({ message: "No user found with this email" });
+        return res.status(404).json({ message: "Sorry, no user found with this email. Please check your login details." });
       }
 
       // Compare passwords
       const isPasswordMatch = await bcrypt.compare(password, user.password);
       if (!isPasswordMatch) {
-          return res.status(401).json({ message: "Invalid password" });
+          return res.status(401).json({ message: "Incorrect password. Please try again." });
       }
 
       // Generate JWT token
       const token = generateToken(user._id, user.isAdmin);
 
       // Respond with success message and token
-      res.json({
+      res.status(200).json({
           message: "Logged in successfully",
           user: {id: user._id, name: user.name, email: user.email, isAdmin: user.isAdmin},
           token,
@@ -183,54 +184,54 @@ const passwordResetEmail = (token) => `
     <p>The token above will expire in one hour. If you didn't request this password reset, please ignore this email.</p>
 `;
 
-const forgetPassword = asyncHandler (async (req, res) => {
-    const {email} = req.body; 
+const forgetPassword = asyncHandler(async (req, res) => {
+    const { email } = req.body;
 
     // Check if email is provided 
     if (!email) {
-        return res.status(400).json({message: "Please provide an email address"}); 
+        return res.status(400).json({ message: "Please provide a valid email address." });
     }
 
     try {
         // Find the user by email
-        const user = await UserModel.findOne ({email}); 
+        const user = await UserModel.findOne({ email });
         if (!user) {
-            return res.status(404).json({message: "User not found"}); 
+            return res.status(404).json({ message: "No user found with this email address." });
         }
 
         // Generate a unique JWT token for password reset
-        const token = jwt.sign({userId: user._id}, process.env.JWT_RESET_PASSWORD_SECRET, {expiresIn: '1h'}); 
+        const token = jwt.sign({ userId: user._id }, process.env.JWT_RESET_PASSWORD_SECRET, { expiresIn: '1h' });
 
-        // Configure the email transporter 
-        const emailSender = nodemailer.createTransport ({
-            service: "gmail", 
+        // Configure the email transporter
+        const emailSender = nodemailer.createTransport({
+            service: "gmail",
             auth: {
-                user: process.env.EMAIL, 
+                user: process.env.EMAIL,
                 pass: process.env.EMAIL_PASS,
-            }, 
-        }); 
+            },
+        });
 
         // Define email content
         const mailFormat = {
-            from: process.env.EMAIL,  
-            to: req.body.email, 
-            subject: "Reset Password",  
-            html: passwordResetEmail(token), 
-        }; 
+            from: process.env.EMAIL,
+            to: req.body.email,
+            subject: "Reset Password",
+            html: passwordResetEmail(token),
+        };
 
         // Send the email
         await emailSender.sendMail(mailFormat);
 
         // Respond with a success message
-        res.status(200).json({ 
-            message: "If a user with that email exists, a password reset link has been sent.", 
-            token: token, 
+        res.status(200).json({
+            message: "If a user with that email exists, a password reset link has been sent.",
+            token: token,
         });
     } catch (error) {
         console.error("Error during forget password process:", error);
         res.status(500).json({ message: "An error occurred. Please try again later." });
     }
-}); 
+});
 
 const resetPassword = asyncHandler(async (req, res) => {
     const { newPassword, resetToken } = req.body;
