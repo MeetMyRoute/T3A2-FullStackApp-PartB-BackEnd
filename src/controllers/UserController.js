@@ -2,7 +2,6 @@ const bcrypt = require("bcryptjs");
 const asyncHandler = require("express-async-handler"); 
 const jwt = require("jsonwebtoken");
 const nodemailer = require ("nodemailer"); 
-const upload = require("../middleware/uploadConfig");
 const { UserModel } = require('../models/UserModel');
 
 // Generate JWT Token
@@ -33,11 +32,11 @@ const getAllUsers = asyncHandler(async (req, res) => {
 // @desc    Register new user
 // @route   POST /user
 const registerUser = asyncHandler(async (req, res) => {
-  const {name, email, password, status, location, travelPreferencesAndGoals, socialMediaLink, isAdmin} = req.body;
+  const {name, email, password, status, profilePic, location, travelPreferencesAndGoals, socialMediaLink, isAdmin} = req.body;
 
   try {
       // Check fields have been filled in
-      if (!name || !email || !password || !status || !location || !travelPreferencesAndGoals || !socialMediaLink) {
+      if (!name || !email || !password || !status || !location || !socialMediaLink) {
           return res.status(400).json({ message: "Please fill in all fields" });
       }
 
@@ -50,12 +49,6 @@ const registerUser = asyncHandler(async (req, res) => {
       // Create hashed password
       const salt = await bcrypt.genSalt(10); 
       const hashedPassword = await bcrypt.hash(password, salt);
-      
-      // Handle file upload
-      let profilePicPath = null;
-      if (req.file) {
-         profilePicPath = req.file.path;
-       }
 
       // Create a new user
       const newUser = await UserModel.create({
@@ -65,8 +58,8 @@ const registerUser = asyncHandler(async (req, res) => {
           location,
           travelPreferencesAndGoals,
           status,
+          profilePic,
           socialMediaLink,
-          profilePic: profilePicPath, 
           isAdmin: isAdmin || false 
       });
 
@@ -80,7 +73,7 @@ const registerUser = asyncHandler(async (req, res) => {
               location: newUser.location,
               travelPreferencesAndGoals: newUser.travelPreferencesAndGoals, 
               socialMediaLink: newUser.socialMediaLink,
-              profilePic: profilePicPath, 
+              profilePic: newUser.profilePic, 
               token: generateToken(newUser._id),
           });
       } else {
