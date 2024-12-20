@@ -1,20 +1,20 @@
 const { UserModel } = require("../models/UserModel");
 const { ItineraryModel } = require("../models/ItineraryModel");
+const { MessageModel } = require("../models/MessageModel");
 
 // Get a user profile
 const getProfile = async (req, res) => {
     try {
         // Get the user ID from the URL parameters
         const {id} = req.params;
-        
-        // Get logged in user ID from JWT token
+
+        // Get logged in user ID from the request
         const loggedInUserId = req.user.id;
 
         // Find user profile that belong to the user ID
         const user = await UserModel.findById(id);
 
         // Check if the user ID exists
-        // If not, return error
         if (!user) {
             return res.status(404).json({
                 message: "User not found"
@@ -22,14 +22,20 @@ const getProfile = async (req, res) => {
         }
 
         // Check if logged in user ID is not the same as user ID from the URL parameters and status is set to Private 
-        // If yes, return error
         if (loggedInUserId !== id && user.status == "Private") {
             return res.status(403).json({
                 message: "User profile is private"
             })
         }
 
-        // Find itineraries belonging to the user ID
+        // Check if the user has connected with the other user
+        const hasConnected = await MessageModel.exists({
+            $or: [
+                {senderId: loggedInUserId, recipientId: id},
+                {senderId: id, recipientId: loggedInUserId}
+            ]
+        });
+        // Find itineraries belonging to the user
         const itineraries = await ItineraryModel.find({userId: id}).select("destination startDate endDate");
 
         // Format itineraries
@@ -49,6 +55,7 @@ const getProfile = async (req, res) => {
                 profilePic: user.profilePic,
                 travelPreferencesAndGoals: user.travelPreferencesAndGoals,
                 socialMediaLink: user.socialMediaLink,
+                hasConnected: !!hasConnected,
                 itineraries: formattedItineraries
             }
         });
@@ -82,7 +89,6 @@ const updateProfile = async (req, res) => {
         const user = await UserModel.findById(id);
 
         // Check if user ID exists
-        // If not, return error
         if (!user) {
             return res.status(404).json({
                 message: "User not found"

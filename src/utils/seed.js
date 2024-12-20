@@ -112,6 +112,8 @@ const seedItineraries = async(users) => {
     }
 }
 
+// Add connects seeds
+
 const dbSeed = async () => {
     try {
         // Connect to the database
