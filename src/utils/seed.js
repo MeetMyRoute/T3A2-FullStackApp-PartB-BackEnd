@@ -1,4 +1,5 @@
 const { ItineraryModel } = require("../models/ItineraryModel");
+const { MessageModel } = require("../models/MessageModel");
 const { UserModel } = require("../models/UserModel");
 const { dbConnect, dbDrop, dbDisconnect } = require("./database");
 const bcrypt = require('bcryptjs');
@@ -15,7 +16,7 @@ const seedUsers = async () => {
             isAdmin: false,
             location: "New York",
             travelPreferencesAndGoals: ["City Tours"],
-            socialMediaLink: "https://twitter.com/joshsmith"
+            socialMediaLink: "https://twitter.com/jessicaturner"
         },
         {
             name: "Alice Turner",
@@ -55,52 +56,50 @@ const seedUsers = async () => {
     }
 };
 
-const seedItineraries = async(users) => {
+const seedItineraries = async (users) => {
     const itineraries = [
         {
             userId: users[0]._id,
             destination: "London",
-            startDate: "2025-01-15",
-            endDate: "2025-01-19",
+            startDate: "2025-02-02",
+            endDate: "2025-02-19",
             accommodation: "Hilton London Hyde Park",
             activities: ["The British Museum", "Tower of London"]
         },
         {
            userId: users[0]._id,
            destination: "Lisbon",
-           startDate: "2025-02-08",
-           endDate: "2025-02-12",
-           accommodation: "Hotel da Baixa",
+           startDate: "2025-04-06",
+           endDate: "2025-04-15",
            activities: ["Belem Tower"]
         },
         {
             userId: users[1]._id,
             destination: "Prague",
-            startDate: "2025-03-12",
-            endDate: "2025-03-19",
-            accommodation: "Alfons Boutique Hotel",
-            activities: ["Prague Castle", "Charles Bridge"]
+            startDate: "2025-06-22",
+            endDate: "2025-06-25",
+            accommodation: "Alfons Boutique Hotel"
         },
         {
             userId: users[1]._id,
-            destination: "Cairo",
-            startDate: "2025-04-10",
-            endDate: "2025-04-19",
-            accommodation: "Sofitel Cairo Nile El Gezirah",
-            activities: ["The Egyptian Museum in Cairo"]
+            destination: "Lisbon",
+            startDate: "2025-04-05",
+            endDate: "2025-04-18"
         },
         {
             userId: users[2]._id,
             destination: "New Orleans",
-            startDate: "2025-01-23",
-            endDate: "2025-01-29",
+            startDate: "2025-10-16",
+            endDate: "2025-10-20",
+            accommodation: "The Westin New Orleans",
             activities: ["Jackson Square", "New Orleans City Park"]
         },
         {
             userId: users[2]._id,
-            destination: "Cairo",
-            startDate: "2025-04-11",
-            endDate: "2025-04-13",
+            destination: "Prague",
+            startDate: "2025-06-12",
+            endDate: "2025-06-28",
+            activities: ["Prague Castle"]
         }
     ]
 
@@ -112,7 +111,35 @@ const seedItineraries = async(users) => {
     }
 }
 
-// Add connects seeds
+const seedMessages = async (users) => {
+    const messages = [
+        {
+            senderId: users[0]._id,
+            recipientId: users[2]._id,
+            message: "Hey Kate Salmon, I'm travelling to your city. Let's connect via social media!",
+            timestamp: new Date("2024-23-09T10:00:00")
+        },
+        {
+            senderId: users[1]._id,
+            recipientId: users[0]._id,
+            message: "Hey Jessica Turner, I'm travelling to your destination. Let's connect via social media!",
+            timestamp: new Date("2024-12-03T14:00:00")
+        },
+        {
+            senderId: users[2]._id,
+            recipientId: users[1]._id,
+            message: "Hey Alice Turner, I'm travelling to your destination. Let's connect via social media!",
+            timestamp: new Date("2024-12-07T18:00:00")
+        }
+    ]
+
+    try {
+        const createdMessages = await MessageModel.insertMany(messages);
+        console.log("Messages seeded: ", createdMessages);
+    } catch (error) {
+        console.log("Error seeding messages: ", error.message);
+    }
+}
 
 const dbSeed = async () => {
     try {
@@ -131,6 +158,10 @@ const dbSeed = async () => {
         // Seed itineraries with user references
         console.log("Seeding itineraries...");
         await seedItineraries(users);
+
+        // Seed messages between users
+        console.log("Seeding messages...");
+        await seedMessages(users);
 
         console.log("Database seed process completed");
     } catch (error) {
