@@ -48,6 +48,7 @@ const getProfile = async (req, res) => {
         res.status(200).json({
             message: "User profile retrieved successfully",
             data: {
+                _id: loggedInUserId,
                 name: user.name,
                 location: user.location, 
                 status: user.status,
@@ -71,10 +72,11 @@ const updateProfile = async (req, res) => {
     try {
         // Get the user ID from the URL parameters
         const {id} = req.params;
+
         // Get data to update from the request body
         const {name, location, status, profilePic, travelPreferencesAndGoals, socialMediaLink} = req.body;
 
-        // Get user ID from JWT token
+        // Get user ID from the request
         const loggedInUserId = req.user.id;
 
         // Check if logged in user ID matches user ID from the URL parameters
