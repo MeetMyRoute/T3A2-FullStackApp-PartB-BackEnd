@@ -37,7 +37,8 @@ const UserSchema = mongoose.Schema({
     },
     socialMediaLink: {
         type: String,
-        match: /^https?:\/\/(?:www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)+[^\s]*$/
+        match: /^https?:\/\/(?:www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)+[^\s]*$/,
+        required: true
     },
     isAdmin: { 
         type: Boolean,

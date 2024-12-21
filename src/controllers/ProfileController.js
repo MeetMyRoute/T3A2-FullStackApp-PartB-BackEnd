@@ -8,23 +8,21 @@ const getProfile = async (req, res) => {
         // Get the user ID from the URL parameters
         const {id} = req.params;
 
-        // Get from the request
+        // Get logged in user ID from the request
         const loggedInUserId = req.user.id;
 
         // Find user profile that belong to the user ID
         const user = await UserModel.findById(id);
 
         // Check if the user ID exists
-        // If it does not, return error
         if (!user) {
             return res.status(404).json({
                 message: "User not found"
             })
         }
 
-        // Check if status is set to Private
-        // If it is, return error
-        if (user.status == "Private") {
+        // Check if logged in user ID is not the same as user ID from the URL parameters and status is set to Private 
+        if (loggedInUserId !== id && user.status == "Private") {
             return res.status(403).json({
                 message: "User profile is private"
             })
@@ -39,7 +37,7 @@ const getProfile = async (req, res) => {
         });
 
         // Fetch and format itineraries
-        const itineraries = await ItineraryModel.find({ userId: id }).select("destination startDate endDate");
+        const itineraries = await ItineraryModel.find({userId: id}).select("destination startDate endDate");
         const formattedItineraries = itineraries.map(itinerary => ({
             destination: itinerary.destination,
             startDate: itinerary.startDate,
