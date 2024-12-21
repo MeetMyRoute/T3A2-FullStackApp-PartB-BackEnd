@@ -1,18 +1,19 @@
 const { MessageModel } = require("../models/MessageModel");
+const { UserModel } = require("../models/UserModel");
 
 // Send a message and store it in the database
 const sendMessage = async (req, res) => {
     try {
-        // Extract recipient ID and message from the request body
-        const { recipientId, message } = req.body;
+        // Extract destination and recipient from the request body
+        const { recipientId, destination } = req.body;
 
         // Extract sender ID from the authenticated user
         const senderId = req.user.id;
         
-        // Check if recipientId and message are provided
+        // Validate input
         if (!recipientId) {
             return res.status(400).json({
-                message: "Recipient and message are required"
+                message: "Recipient and destination are required"
             });
         }
 
@@ -23,11 +24,27 @@ const sendMessage = async (req, res) => {
             });
         }
 
+        // Fetch recipient details
+        const recipient = await UserModel.findById(recipientId).select("name location socialMediaLink");
+        if (!recipient) {
+            return res.status(404).json({
+                message: "Recipient not found"
+            });
+        }
+
+        // Generate the appropriate message
+        let generatedMessage = "";
+        if (recipient.location === destination) {
+            generatedMessage = `Hey ${recipient.name}, I'm traveling to your city. Let's connect via social media!`;
+        } else if (recipient.location != destination) {
+            generatedMessage = `Hey ${recipient.name}, I'm traveling to your destination. Let's connect via social media!`;
+        }
+
         // Store the message in the database
         const newMessage = await MessageModel.create({
             senderId,
             recipientId,
-            message,
+            message: generatedMessage,
             timestamp: new Date()
         });
 
@@ -38,7 +55,7 @@ const sendMessage = async (req, res) => {
         });
     } catch (error) {
         return res.status(500).json({
-            message: "Error sending message:",
+            message: "Error sending message",
             error: error.message
         });
     }
