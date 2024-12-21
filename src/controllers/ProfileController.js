@@ -30,18 +30,16 @@ const getProfile = async (req, res) => {
             })
         }
 
-        // Check if the user has connected with the other user
+        // Check if connected
         const hasConnected = await MessageModel.exists({
             $or: [
-                {senderId: loggedInUserId, recipientId: id},
-                {senderId: id, recipientId: loggedInUserId}
+                { senderId: loggedInUserId, recipientId: id },
+                { senderId: id, recipientId: loggedInUserId }
             ]
         });
 
-        // Find itineraries belonging to the user
-        const itineraries = await ItineraryModel.find({userId: id}).select("destination startDate endDate");
-
-        // Format itineraries
+        // Fetch and format itineraries
+        const itineraries = await ItineraryModel.find({ userId: id }).select("destination startDate endDate");
         const formattedItineraries = itineraries.map(itinerary => ({
             destination: itinerary.destination,
             startDate: itinerary.startDate,
@@ -64,8 +62,8 @@ const getProfile = async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({
-            message: "Error retrieving user profile:",
-            error 
+            message: "Error retrieving user profile",
+            error: error.message
         });
     }
 }
@@ -117,7 +115,7 @@ const updateProfile = async (req, res) => {
     } catch (error) {
         res.status(500).json({
             message: "Error updated user profile:",
-            error 
+            error: error.message
         });
     }
 }
