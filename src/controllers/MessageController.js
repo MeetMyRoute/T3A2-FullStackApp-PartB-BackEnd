@@ -36,7 +36,7 @@ const sendMessage = async (req, res) => {
         let generatedMessage = "";
         if (recipient.location === destination) {
             generatedMessage = `Hey ${recipient.name}, I'm traveling to your city. Let's connect via social media!`;
-        } else if (recipient.location != destination) {
+        } else {
             generatedMessage = `Hey ${recipient.name}, I'm traveling to your destination. Let's connect via social media!`;
         }
 
